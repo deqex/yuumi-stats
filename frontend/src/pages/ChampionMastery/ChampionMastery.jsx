@@ -37,10 +37,10 @@ export default function ChampionMastery() {
       value={region} 
       onChange={(e) => setRegion(e.target.value)}
     >
+        <option value="eun1">EUNE</option>
         <option value="euw1">EUW</option>
         <option value="na1">NA</option>
         <option value="kr">KR</option>
-        <option value="eun1">EUNE</option>
       </select>
     <button onClick={handleClick}>Get Champion Mastery</button>
     
