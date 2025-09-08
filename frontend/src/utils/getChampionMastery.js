@@ -10,7 +10,7 @@ export async function getChampionMastery(summonerName, summonerTag, region) {
         if (!masteryRes.ok) throw new Error('Failed to fetch champion mastery');
         const champs = await masteryRes.json();
 
-        const championData = await import('../utils/DDragon/champion.json');
+        const championData = await import('../utils/DDragon/champion.json'); //swap to use api end point instead of a local file
         const keyToName = {};
         Object.values(championData.default.data).forEach(champ => {
             keyToName[champ.key] = champ.name;

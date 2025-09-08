@@ -3,7 +3,7 @@ const apikey = "RGAPI-3b615d8f-b95a-4b8f-a967-4a112d82c215";
 export async function getChampionMastery(summonerName, summonerTag, region) {
     let broadRegion;
 
-    try { //don't forget to check region
+    try { 
         const puuidRes = await fetch(`https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${summonerName}/${summonerTag}?api_key=${apikey}`);
         if (!puuidRes.ok) throw new Error('Failed to fetch summoner');
         const { puuid } = await puuidRes.json();
