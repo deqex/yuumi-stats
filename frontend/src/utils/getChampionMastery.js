@@ -1,4 +1,4 @@
-const apikey = "RGAPI-3b615d8f-b95a-4b8f-a967-4a112d82c215";
+const apikey = "RGAPI-98bec423-73e0-4625-add1-648c78ffc352";
 
 export async function getChampionMastery(summonerName, summonerTag, region) {
     try { //don't forget to check region
@@ -10,7 +10,7 @@ export async function getChampionMastery(summonerName, summonerTag, region) {
         if (!masteryRes.ok) throw new Error('Failed to fetch champion mastery');
         const champs = await masteryRes.json();
 
-        const championData = await import('./champion.json');
+        const championData = await import('../utils/DDragon/champion.json');
         const keyToName = {};
         Object.values(championData.default.data).forEach(champ => {
             keyToName[champ.key] = champ.name;
