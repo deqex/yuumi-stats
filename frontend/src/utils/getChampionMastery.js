@@ -1,4 +1,8 @@
-const apikey = "RGAPI-98bec423-73e0-4625-add1-648c78ffc352";
+const apikey = import.meta.env.VITE_RIOT_API_KEY;
+
+if (!apikey) {
+    throw new Error('Missing VITE_RIOT_API_KEY. Define it in your .env and restart the dev server.');
+}
 
 export async function getChampionMastery(summonerName, summonerTag, region) {
     try { //don't forget to check region
