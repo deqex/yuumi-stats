@@ -4,6 +4,8 @@ import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 let matchData;
 let limit = 0;
+let participantsArray = [];
+let riotNames = [];
 
 export default function ChampionMastery() {
   const [summonerName, setSummonerName] = useState('');
@@ -22,6 +24,9 @@ export default function ChampionMastery() {
             limit++;
             console.log(matchId);
             matchData = await getDataFromMatchId(matchId);
+            participantsArray = matchData.info.participants;
+            riotNames = participantsArray.map(p => p.riotIdGameName);
+            console.log(riotNames);
           }
         } catch (error) {
           console.error(error);
