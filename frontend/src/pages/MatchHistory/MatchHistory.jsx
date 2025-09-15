@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import SummonerNameInput from '../../components/SummonerNameInput/SummonerNameInput';
 import { getMatchIds } from '../../utils/getMatchIds';
+import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
+let matchData;
+let limit = 0;
 
 export default function ChampionMastery() {
   const [summonerName, setSummonerName] = useState('');
@@ -13,6 +16,13 @@ export default function ChampionMastery() {
         try {
           const data = await getMatchIds(summonerName, summonerTag, region);
           console.log(data);
+
+          for (const matchId of data) {
+            if (limit>1) break;
+            limit++;
+            console.log(matchId);
+            matchData = await getDataFromMatchId(matchId);
+          }
         } catch (error) {
           console.error(error);
         }

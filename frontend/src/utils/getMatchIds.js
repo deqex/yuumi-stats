@@ -10,6 +10,7 @@ export async function getMatchIds(summonerName, summonerTag, region) {
         const puuid = await getPuuid(summonerName, summonerTag, region);
         if (!puuid) throw new Error('Puuid not found');
 
+        // fix this to use the correct region
         const matchIdRes = await fetch(`
         https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20&api_key=${apikey}
             `);
