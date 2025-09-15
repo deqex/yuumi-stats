@@ -6,7 +6,7 @@ if (!apikey) {
 }
 
 export async function getChampionMastery(summonerName, summonerTag, region) {
-    try { //don't forget to check region
+    try { 
         const puuid = await getPuuid(summonerName, summonerTag, region);
         if (!puuid) throw new Error('Puuid not found');
 
