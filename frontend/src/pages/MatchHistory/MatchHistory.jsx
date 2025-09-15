@@ -22,7 +22,7 @@ export default function ChampionMastery() {
           for (const matchId of data) {
             if (limit>1) break;
             limit++;
-            console.log(matchId);
+            
             matchData = await getDataFromMatchId(matchId);
             participantsArray = matchData.info.participants;
             riotNames = participantsArray.map(p => p.riotIdGameName);
