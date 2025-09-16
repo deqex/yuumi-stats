@@ -2,6 +2,7 @@ import { useState } from 'react';
 import SummonerNameInput from '../../components/SummonerNameInput/SummonerNameInput';
 import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
+import dissectMatchData from '../../utils/dissectMatchData';
 let matchData;
 let limit = 0;
 let participantsArray = [];
@@ -24,6 +25,8 @@ export default function ChampionMastery() {
             limit++;
             
             matchData = await getDataFromMatchId(matchId);
+            const players = dissectMatchData(matchData);
+            console.log('dissected players', players);
             participantsArray = matchData.info.participants;
             riotNames = participantsArray.map(p => p.riotIdGameName);
             console.log(riotNames);
