@@ -16,6 +16,8 @@ export default function AppRoutes() {
                     <Route path="/" element={<Home></Home>} />
                     <Route path="/ChampionMastery" element={<ChampionMastery></ChampionMastery>} />
                     <Route path="/MatchHistory" element={<MatchHistory></MatchHistory>} />
+                    <Route path="/profile/:region/:nameTag/overview" element={<MatchHistory></MatchHistory>} />
+                    <Route path="/profile/:region/:nameTag/mastery" element={<ChampionMastery></ChampionMastery>} />
                 </Routes>
             </BrowserRouter>
         </>
