@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SummonerNameInput from '../../components/SummonerNameInput/SummonerNameInput';
 import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
@@ -11,6 +11,7 @@ export default function MatchHistory() {
   const [region, setRegion] = useState('euw1');
   const [matches, setMatches] = useState([]);
   const params = useParams();
+  const navigate = useNavigate();
 
   const fetchMatches = async (name, tag, regionCode) => {
     if (!name || !tag) return;
@@ -37,6 +38,8 @@ export default function MatchHistory() {
   };
 
   const handleClick = async () => {
+    if (!summonerName || !summonerTag) return;
+    navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`);
     fetchMatches(summonerName, summonerTag, region);
   };
 
@@ -49,13 +52,6 @@ export default function MatchHistory() {
     setSummonerTag(tagFromUrl || '');
   }, [params]);
 
-  useEffect(() => {
-    // Auto-trigger when URL params populate state
-    if (summonerName && summonerTag && region) {
-      fetchMatches(summonerName, summonerTag, region);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [summonerName, summonerTag, region]);
 
   return (
     <>

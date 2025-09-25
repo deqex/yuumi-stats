@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getChampionMastery } from '../../utils/getChampionMastery';
 import SummonerNameInput from '../../components/SummonerNameInput/SummonerNameInput';
 
@@ -9,11 +9,13 @@ export default function ChampionMastery() {
   const [region, setRegion] = useState('euw1');
   const [champions, setChampions] = useState([]);
   const params = useParams();
+  const navigate = useNavigate();
 
   const handleClick = async () => {
     if (!summonerName || !summonerTag) return;
 
     try {
+      navigate(`/profile/${region}/${summonerName}-${summonerTag}/mastery`);
       const data = await getChampionMastery(summonerName, summonerTag, region);
       setChampions(data);
     } catch (error) {
@@ -30,12 +32,6 @@ export default function ChampionMastery() {
     setSummonerTag(tagFromUrl || '');
   }, [params]);
 
-  useEffect(() => {
-    if (summonerName && summonerTag && region) {
-      handleClick();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [summonerName, summonerTag, region]);
 
   return (
     <>
