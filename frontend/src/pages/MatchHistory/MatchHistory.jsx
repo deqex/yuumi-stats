@@ -5,6 +5,7 @@ import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import MatchCard from '../../components/MatchCard/MatchCard';
+
 export default function MatchHistory() {
   const [summonerName, setSummonerName] = useState('');
   const [summonerTag, setSummonerTag] = useState('');
@@ -15,43 +16,29 @@ export default function MatchHistory() {
 
   const fetchMatches = async (name, tag, regionCode) => {
     if (!name || !tag) return;
-
-        try {
-          const data = await getMatchIds(name, tag, regionCode);
-          console.log(data);
-
-          const collected = [];
-          let limit = 0;
-          for (const matchId of data) {
-            if (limit > 2) break;
-            limit++;
-            
-            const matchData = await getDataFromMatchId(matchId);
-            const players = dissectMatchData(matchData);
-            collected.push({ matchId, players });
-            console.log('dissected players', players);
-          }
-          setMatches(collected);
-        } catch (error) {
-          console.error(error);
-        }
-  };
-
-  const handleClick = async () => {
-    if (!summonerName || !summonerTag) return;
-    navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`);
-    fetchMatches(summonerName, summonerTag, region);
+    try {
+      const matchIds = await getMatchIds(name, tag, regionCode);
+      const matchData = await Promise.all(
+        matchIds.slice(0, 3).map(async (matchId) => {
+          const data = await getDataFromMatchId(matchId);
+          return { matchId, players: dissectMatchData(data) };
+        })
+      );
+      setMatches(matchData);
+    } catch (error) {
+      console.error('Failed to fetch matches:', error);
+    }
   };
 
   useEffect(() => {
-    if (!params || !params.region || !params.nameTag) return;
-    const regionFromUrl = params.region;
-    const [nameFromUrl, tagFromUrl] = (params.nameTag || '').split('-');
-    setRegion(regionFromUrl);
-    setSummonerName(nameFromUrl || '');
-    setSummonerTag(tagFromUrl || '');
+    if (params.region && params.nameTag) {
+      const [name, tag] = params.nameTag.split('-');
+      setRegion(params.region);
+      setSummonerName(name || '');
+      setSummonerTag(tag || '');
+      fetchMatches(name, tag, params.region);
+    }
   }, [params]);
-
 
   return (
     <>
@@ -63,13 +50,20 @@ export default function MatchHistory() {
         setSummonerTag={setSummonerTag}
         region={region}
         setRegion={setRegion}
-        handleClick={handleClick}
+        handleClick={() => {
+          if (!summonerName || !summonerTag) return;
+          navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`);
+        }}
       />
       <div>
-        {matches.map((m) => (
-          <MatchCard key={m.matchId} data={m.players} focusName={summonerName} />
+        {matches.map((match) => (
+          <MatchCard
+            key={match.matchId}
+            data={match.players}
+            focusName={summonerName}
+          />
         ))}
       </div>
     </>
-  )
+  );
 }
