@@ -1,7 +1,12 @@
 
 export default function dissectMatchData(matchData) {
   let participants = [];
-  if (matchData) {
+  // Defensive check to avoid errors if matchData or matchData.info is undefined
+  if (
+    matchData &&
+    matchData.info &&
+    Array.isArray(matchData.info.participants)
+  ) {
     participants = matchData.info.participants;
   }
 

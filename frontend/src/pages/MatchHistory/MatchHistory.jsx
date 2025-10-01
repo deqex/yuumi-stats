@@ -5,6 +5,7 @@ import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import MatchCard from '../../components/MatchCard/MatchCard';
+import { genScore } from '../../utils/genScore';
 
 export default function MatchHistory() {
   const [summonerName, setSummonerName] = useState('');
@@ -21,6 +22,7 @@ export default function MatchHistory() {
       const matchData = await Promise.all(
         matchIds.slice(0, 3).map(async (matchId) => {
           const data = await getDataFromMatchId(matchId);
+          genScore(data); // Pass raw match data to genScore
           return { matchId, players: dissectMatchData(data) };
         })
       );
