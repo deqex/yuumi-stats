@@ -1,9 +1,11 @@
 import dissectMatchData from './dissectMatchData';
 
-export async function genScore(result) {
-    const dataa = dissectMatchData(result);
-    Object.values(dataa).forEach(p => {
-        let gameDuration = 1590;
+
+export async function genScore(players, gameInfo) {
+    let gameDuration = gameInfo.gameDuration;
+    console.log(" gameDuration", gameDuration);
+
+    Object.values(players).forEach(p => {
 
         let kdaScore = (p.kills ?? 0) * 1.5 + (p.assists ?? 0) - (p.deaths ?? 0);
         let damageScore = (p.totalDamageDealtToChampions ?? 0) / gameDuration;
@@ -17,8 +19,6 @@ export async function genScore(result) {
         console.log("gen", p.riotIdGameName, Math.round(score)); 
         console.log("gen", p.riotIdGameName, Math.round(kdaScore), Math.round(damageScore), Math.round(visionScore), Math.round(csScore), Math.round(enchanterScore), Math.round(tankScore), Math.round(goldScore)); 
     });
-    return dataa;
+    return players;
 }
 //pocet score za goldy = % goldu ze hry
-// bod za objectives
-
