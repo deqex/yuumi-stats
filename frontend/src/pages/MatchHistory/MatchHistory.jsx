@@ -21,12 +21,12 @@ export default function MatchHistory() {
     try {
       const matchIds = await getMatchIds(name, tag, regionCode);
       const matchData = await Promise.all(
-        matchIds.slice(0, 3).map(async (matchId) => {
+        matchIds.slice(0, 8).map(async (matchId) => {
           const data = await getDataFromMatchId(matchId);
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
-          genScore(players, gameInfo); 
-          return { matchId, players };
+          const scoredPlayers = await genScore(players, gameInfo);
+          return { matchId, players: scoredPlayers };
         })
       );
       setMatches(matchData);
