@@ -60,6 +60,7 @@ export default function MatchCard({ data, focusName }) {
       `csScore: ${round(b.csScore)}`,
       `enchanterScore: ${round(b.enchanterScore)}`,
       `tankScore: ${round(b.tankScore)}`,
+      `ccScore: ${round(b.ccScore)}`,
       `goldScore: ${round(b.goldScore)}`,
     ];
     return lines.join('\n');
