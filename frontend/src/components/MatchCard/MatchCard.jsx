@@ -1,5 +1,18 @@
 import React from 'react'
 
+// Preload all champion icons and build a normalized lookup table
+// Vite will transform these at build time and give us URLs
+const iconModules = import.meta.glob('../../assets/img/championIcons/*.png', { eager: true, as: 'url' });
+const ICONS_BY_KEY = (() => {
+  const map = {};
+  for (const [path, url] of Object.entries(iconModules)) {
+    const base = path.split('/').pop().replace(/\.png$/i, '');
+    const key = base.toLowerCase().replace(/[^a-z]/g, '');
+    map[key] = url;
+  }
+  return map;
+})();
+
 // data: result of dissectMatchData(matchData)
 // focusName: summoner name to highlight (riotIdGameName)
 
@@ -75,15 +88,11 @@ export default function MatchCard({ data, focusName }) {
     );
   };
 
-  // Resolve champion icon from assets (works with Vite)
+  // Resolve champion icon via preloaded map (robust to casing/punctuation)
   const getChampionImgUrl = (championName) => {
     if (!championName) return null;
-    try {
-      const file = `${championName}_0.jpg`;
-      return new URL(`../../assets/img/championIcons/${file}`, import.meta.url).href;
-    } catch (e) {
-      return null;
-    }
+    const key = String(championName).toLowerCase().replace(/[^a-z]/g, '');
+    return ICONS_BY_KEY[key] || null;
   };
 
   const ChampIcon = ({ name }) => {

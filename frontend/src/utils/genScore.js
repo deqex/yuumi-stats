@@ -10,10 +10,10 @@ export async function genScore(players, gameInfo) {
         const visionScore = (p.visionScore ?? 0) * 400 / gameDuration;
         const csScore = ((p.champExperience ?? 0) / gameDuration);
         const enchanterScore = (((p.totalDamageShieldedOnTeammates ?? 0) + (p.totalHealsOnTeammates ?? 0)) *1.3) / gameDuration;
-        const tankScore = (((p.totalDamageTaken ?? 0)/2 + (p.damageSelfMitigated ?? 0)*2) / gameDuration) * 0.2;
+        const tankScore = (((p.totalDamageTaken ?? 0) + (p.damageSelfMitigated ?? 0)) / gameDuration) * 0.2;
         const ccScore = (p.timeCCingOthers*300 ?? 0) / gameDuration;
         const goldScore = ((p.goldEarned ?? 0) / totalGoldEarned) * 100;
-        const damageScore = totalDamageAllPlayers ? ((p.totalDamageDealtToChampions ?? 0) / totalDamageAllPlayers) * 100 : 0;
+        const damageScore = (totalDamageAllPlayers ? ((p.totalDamageDealtToChampions ?? 0) / totalDamageAllPlayers) * 100 : 0)*1.5;
 
         const score = kdaScore + damageScore + visionScore + csScore + enchanterScore + tankScore + goldScore + ccScore ;
         p.opScore = score;
@@ -35,3 +35,7 @@ export async function genScore(players, gameInfo) {
 // pocet score za goldy = % goldu ze hry
 //const goldScore = ((p.goldEarned ?? 0) / gameDuration) * 2;
 //const damageScore = (p.totalDamageDealtToChampions ?? 0) / gameDuration;
+
+
+//issues
+//ccScore & nocturne
