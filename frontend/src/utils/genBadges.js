@@ -43,8 +43,13 @@ export async function genBadges(players, gameInfo) {
             p.badges.push("Thief");
         }
 
+        
         if (p.opScore < 30) {
-            p.badges.push("Feeding");
+            p.badges.push("Useless");
+        }
+
+        if (p.opScore > 100) {
+            p.badges.push("Unstoppable");
         }
 
 
