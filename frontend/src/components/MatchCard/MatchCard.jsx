@@ -110,13 +110,26 @@ export default function MatchCard({ data, focusName }) {
     );
   };
 
-  const ItemRowStub = () => (
-    <div style={{ display: 'flex', gap: 6 }}>
-      {Array.from({ length: 7 }).map((_, i) => (
-        <div key={i} style={{ width: 24, height: 24, borderRadius: 4, background: 'rgba(255,255,255,0.08)' }} />
-      ))}
-    </div>
-  );
+  const BadgeDisplay = ({ badges }) => {
+    if (!badges || badges.length === 0) return null;
+
+    return (
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {badges.map((badge, index) => (
+          <span key={index} style={{
+            display: 'inline-block',
+            padding: '2px 6px',
+            borderRadius: 8,
+            background: 'rgba(251, 191, 36, 0.15)',
+            color: '#FBBF24',
+            fontSize: 10,
+            fontWeight: 700,
+            border: '1px solid rgba(251, 191, 36, 0.3)'
+          }}>{badge}</span>
+        ))}
+      </div>
+    );
+  };
 
   const rowGrid = '1fr 72px 120px 1fr 60px 60px 180px';
 
@@ -174,7 +187,7 @@ export default function MatchCard({ data, focusName }) {
         </div>
         <div style={{ textAlign: 'center', color: '#E5E7EB', fontWeight: 600 }}>{p?.visionScore ?? 0}</div>
         <div style={{ textAlign: 'center', color: '#E5E7EB', fontWeight: 600 }}>{cs}</div>
-        <ItemRowStub />
+        <BadgeDisplay badges={p?.badges} />
       </div>
     );
   };
@@ -253,7 +266,7 @@ export default function MatchCard({ data, focusName }) {
           <div>Damage</div>
           <div>Vision</div>
           <div>CS</div>
-          <div>Items</div>
+          <div>Badges</div>
         </div>
         {blueTeam.map(renderRow)}
       </div>
@@ -270,7 +283,7 @@ export default function MatchCard({ data, focusName }) {
           <div>Damage</div>
           <div>Vision</div>
           <div>CS</div>
-          <div>Items</div>
+          <div>Badges</div>
         </div>
         {redTeam.map(renderRow)}
       </div>

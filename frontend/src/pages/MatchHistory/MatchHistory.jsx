@@ -7,6 +7,7 @@ import dissectMatchData from '../../utils/dissectMatchData';
 import dissectGeneralMatchData from '../../utils/dissectGeneralMatchData';
 import MatchCard from '../../components/MatchCard/MatchCard';
 import { genScore } from '../../utils/genScore';
+import { genBadges } from '../../utils/genBadges';
 
 export default function MatchHistory() {
   const [summonerName, setSummonerName] = useState('');
@@ -26,7 +27,8 @@ export default function MatchHistory() {
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
           const scoredPlayers = await genScore(players, gameInfo);
-          return { matchId, players: scoredPlayers };
+          const playersWithBadges = await genBadges(scoredPlayers, gameInfo);
+          return { matchId, players: playersWithBadges };
         })
       );
       setMatches(matchData);
