@@ -3,6 +3,8 @@ export async function genBadges(players, gameInfo) {
     let highestGoldPlayer = null;
     let maxGold = 0;
 
+    console.log(players[2]);
+
     Object.values(players).forEach(player => {
         const goldEarned = player?.goldEarned ?? 0;
         if (goldEarned > maxGold) {
@@ -13,7 +15,7 @@ export async function genBadges(players, gameInfo) {
 
 
     Object.values(players).forEach(p => {
-        // Initialize badges array if it doesn't exist
+        
         if (!p.badges) {
             p.badges = [];
         }
