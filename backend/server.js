@@ -1,10 +1,11 @@
 import express from 'express';
 import { connectDB } from './src/config/db.js';
 import dotenv from 'dotenv';
+import matchesRoutes from './src/routes/matchesRoutes.js'; //zkontrolujk zda je cesta správná
 dotenv.config();
 const app = express();
 
-
+app.use("/api/matches", matchesRoutes);
 
 
 app.listen(process.env.PORT, () => {
