@@ -7,7 +7,9 @@ const app = express();
 
 app.use("/api/matches", matchesRoutes);
 
-
+import dns from "node:dns/promises";
+dns.setServers(["1.1.1.1"]);
+console.log(await dns.getServers());
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });
