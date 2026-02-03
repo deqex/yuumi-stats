@@ -31,7 +31,6 @@ const matchSchema = new mongoose.Schema({
     required: true 
   },
   
-  // Essential data for stats calculation
   participantSummaries: [{
     puuid: { type: String, required: true, index: true },
     championId: { type: Number, required: true },
@@ -55,9 +54,6 @@ const matchSchema = new mongoose.Schema({
   timestamps: false
 });
 
-// Critical indexes for time-based stats
-//matchSummarySchema.index({ gameCreation: -1 });
-//matchSummarySchema.index({ "participantSummaries.puuid": 1, gameCreation: -1 });
 
 module.exports = mongoose.model('Match', matchSchema);
 
