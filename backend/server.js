@@ -3,9 +3,11 @@ import { connectDB } from './src/config/db.js';
 import dotenv from 'dotenv';
 import matchesRoutes from './src/routes/matchesRoutes.js'; //zkontrolujk zda je cesta správná
 import dns from "node:dns/promises";
+
 dotenv.config();
 const app = express();
 
+app.use(express.json());
 app.use("/api/matches", matchesRoutes);
 
 

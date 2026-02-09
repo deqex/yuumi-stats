@@ -54,7 +54,6 @@ const matchSchema = new mongoose.Schema({
   timestamps: false
 });
 
-
-module.exports = mongoose.model('Match', matchSchema);
+const Match = mongoose.model('Match', matchSchema);
 
 export default Match;
