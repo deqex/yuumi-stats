@@ -95,7 +95,7 @@ body {
   background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #ede9fe 100%);
   border-radius: 14px;
   box-shadow: 0 6px 24px 0 rgba(139, 92, 246, 0.13);
-  width: 480px;
+  width: 520px;
   height: 58px;
   margin-bottom: 22px;
   border: 1.5px solid #e0c3fc;
@@ -107,13 +107,17 @@ body {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 22px;
-  padding: 0 20px;
-  border-radius: 14px;
+  font-size: 18px;
+  padding: 0 12px;
   color: #444;
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   font-family: 'Lexend', sans-serif;
+}
+
+.search-input::placeholder {
+  color: #999;
+  font-weight: 400;
 }
 
 .search-button {
@@ -127,6 +131,12 @@ body {
   box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
   border: none;
   cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.search-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .regions {
@@ -147,6 +157,10 @@ body {
   cursor: pointer;
   letter-spacing: 1px;
   text-shadow: 0 1px 4px #8B5CF6;
-  transition: transform 0.1s;
+  transition: transform 0.1s, opacity 0.1s;
   font-family: 'Lexend', sans-serif;
+}
+
+.region-button:hover {
+  transform: scale(1.05);
 }
