@@ -12,7 +12,7 @@ export async function getMatchIds(summonerName, summonerTag, region) {
 
         // fix this to use the correct region
         const matchIdRes = await fetch(`
-        https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20&api_key=${apikey}
+        https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5&api_key=${apikey}
             `);
         if (!matchIdRes.ok) throw new Error('Failed to fetch champion mastery');
         const MatchIds = await matchIdRes.json();
