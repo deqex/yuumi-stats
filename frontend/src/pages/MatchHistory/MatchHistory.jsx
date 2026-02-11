@@ -180,7 +180,7 @@ export default function MatchHistory() {
   return (
     <div className="match-history-container">
       <Navbar />
-      <div className="match-history-content">
+      <div className="match-history-inner">
         {/* Search Section */}
         <div className="match-history-search">
           <div className="search-container-profile">
