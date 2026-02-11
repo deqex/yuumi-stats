@@ -1,17 +1,7 @@
 import React from 'react'
 
-// Preload all champion icons and build a normalized lookup table
-// Vite will transform these at build time and give us URLs
-const iconModules = import.meta.glob('../../assets/img/championIcons/*.png', { eager: true, as: 'url' });
-const ICONS_BY_KEY = (() => {
-  const map = {};
-  for (const [path, url] of Object.entries(iconModules)) {
-    const base = path.split('/').pop().replace(/\.png$/i, '');
-    const key = base.toLowerCase().replace(/[^a-z]/g, '');
-    map[key] = url;
-  }
-  return map;
-})();
+// DDragon CDN base for champion icons
+const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
 
 // data: result of dissectMatchData(matchData)
 // focusName: summoner name to highlight (riotIdGameName)
@@ -88,11 +78,12 @@ export default function MatchCard({ data, focusName }) {
     );
   };
 
-  // Resolve champion icon via preloaded map (robust to casing/punctuation)
+  // Resolve champion icon via DDragon CDN
   const getChampionImgUrl = (championName) => {
     if (!championName) return null;
-    const key = String(championName).toLowerCase().replace(/[^a-z]/g, '');
-    return ICONS_BY_KEY[key] || null;
+    const id = String(championName).replace(/[^A-Za-z]/g, '');
+    if (!id) return null;
+    return `${DD_CHAMPION_ICON_BASE}/${id}.png`;
   };
 
   const ChampIcon = ({ name }) => {

@@ -61,6 +61,21 @@ export default function MatchHistory() {
 
   const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
 
+  const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
+  const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
+
+  const getChampionIconUrl = (name) => {
+    if (!name) return null;
+    const id = String(name).replace(/[^A-Za-z]/g, '');
+    if (!id) return null;
+    return `${DD_CHAMPION_ICON_BASE}/${id}.png`;
+  };
+
+  const getItemIconUrl = (id) => {
+    if (!id) return null;
+    return `${DD_ITEM_ICON_BASE}/${id}.png`;
+  };
+
   const SimplifiedMatchCard = ({ match }) => {
     const players = Object.values(match.players);
     const focusPlayer = players.find(p => (p?.name || '').toLowerCase() === summonerName.toLowerCase());
@@ -84,6 +99,40 @@ export default function MatchHistory() {
 
     const kda = focusPlayer.kills + focusPlayer.deaths + focusPlayer.assists;
     const kdaRatio = focusPlayer.deaths > 0 ? (focusPlayer.kills + focusPlayer.assists) / focusPlayer.deaths : focusPlayer.kills + focusPlayer.assists;
+
+    // Use AI score computed in genScore.js (opScore) and rank among all players
+    const focusAiScore = typeof focusPlayer.opScore === 'number' ? focusPlayer.opScore : null;
+    const roundedAiScore = focusAiScore !== null ? Math.round(focusAiScore) : null;
+
+    const scoredPlayers = players.filter(p => typeof p.opScore === 'number');
+    const sortedByScore = [...scoredPlayers].sort((a, b) => b.opScore - a.opScore);
+    const placementIndex = focusAiScore !== null
+      ? sortedByScore.findIndex(p => p.puuid === focusPlayer.puuid)
+      : -1;
+
+    const formatPlacement = (pos) => {
+      if (pos <= 0) return '-';
+      if (pos === 1) return '1st';
+      if (pos === 2) return '2nd';
+      if (pos === 3) return '3rd';
+      return `${pos}th`;
+    };
+
+    const placementLabel = placementIndex >= 0 ? formatPlacement(placementIndex + 1) : '-';
+
+    const focusChampionIcon = getChampionIconUrl(focusPlayer?.championName);
+
+    const itemSlots = [
+      focusPlayer.item0,
+      focusPlayer.item1,
+      focusPlayer.item2,
+      focusPlayer.item3,
+      focusPlayer.item4,
+      focusPlayer.item5,
+      focusPlayer.item6,
+    ];
+
+    const displayItems = itemSlots.slice(0, 6);
 
     return (
       <div key={match.matchId} className={`match-card ${focusPlayer.win ? 'win' : 'loss'}`}>
@@ -110,16 +159,35 @@ export default function MatchHistory() {
         </div>
 
         {/* Champion Portrait */}
-        <div className="champion-portrait"></div>
+        <div className="champion-portrait">
+          {focusChampionIcon && (
+            <img
+              src={focusChampionIcon}
+              alt={focusPlayer?.championName || 'champion'}
+              className="champion-portrait-img"
+            />
+          )}
+        </div>
 
         <div className="game-champion-status">
         </div>
 
         {/* Items Section */}
         <div className="match-items-section">
-          {[0, 1, 2, 3, 4, 5].map((idx) => (
-            <div key={idx} className="item-icon"></div>
-          ))}
+          {displayItems.map((itemId, idx) => {
+            const src = getItemIconUrl(itemId);
+            return (
+              <div key={idx} className="item-icon">
+                {src && (
+                  <img
+                    src={src}
+                    alt={itemId ? `Item ${itemId}` : 'Empty slot'}
+                    className="item-icon-img"
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* KDA Section */}
@@ -132,11 +200,10 @@ export default function MatchHistory() {
         <div className="match-score-section">
           <div className="score-container">
             <div className="ai-score-badge">
-              <span className="score-value">58</span>
-              <span className="score-label">AI-Score</span>
+              <span className="score-value">{roundedAiScore !== null ? roundedAiScore : '-'}</span>
             </div>
             <div className="position-badge">
-              <span className="position-value">4th</span>
+              <span className="position-value">{placementLabel}</span>
             </div>
           </div>
         </div>
@@ -149,7 +216,15 @@ export default function MatchHistory() {
                 key={p?.puuid}
                 className={`player-item ${(p?.name || '').toLowerCase() === summonerName.toLowerCase() ? 'focus' : ''}`}
               >
-                <span className="player-initial">{getChampionInitial(p?.championName)}</span>
+                {getChampionIconUrl(p?.championName) ? (
+                  <img
+                    src={getChampionIconUrl(p?.championName)}
+                    alt={p?.championName || 'champion'}
+                    className="player-icon"
+                  />
+                ) : (
+                  <span className="player-initial">{getChampionInitial(p?.championName)}</span>
+                )}
                 <span className="player-name">{p?.name}</span>
               </div>
             ))}
@@ -160,7 +235,15 @@ export default function MatchHistory() {
                 key={p?.puuid}
                 className={`player-item ${(p?.name || '').toLowerCase() === summonerName.toLowerCase() ? 'focus' : ''}`}
               >
-                <span className="player-initial">{getChampionInitial(p?.championName)}</span>
+                {getChampionIconUrl(p?.championName) ? (
+                  <img
+                    src={getChampionIconUrl(p?.championName)}
+                    alt={p?.championName || 'champion'}
+                    className="player-icon"
+                  />
+                ) : (
+                  <span className="player-initial">{getChampionInitial(p?.championName)}</span>
+                )}
                 <span className="player-name">{p?.name}</span>
               </div>
             ))}
