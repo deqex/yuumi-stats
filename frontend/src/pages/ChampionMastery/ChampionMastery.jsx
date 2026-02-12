@@ -78,12 +78,6 @@ export default function ChampionMastery() {
     }
   }, [params]);
 
-  const handleSearch = () => {
-    if (!summonerName || !summonerTag) return;
-    hasFetched.current = false;
-    navigate(`/profile/${region}/${summonerName}-${summonerTag}/mastery`);
-  };
-
   // Summary stats
   const totalPoints = champions.reduce((s, c) => s + (c.championPoints || 0), 0);
   const highestLevel = champions.length > 0 ? Math.max(...champions.map(c => c.championLevel)) : 0;
@@ -93,35 +87,6 @@ export default function ChampionMastery() {
     <div className="mastery-container">
       <Navbar />
       <div className="mastery-inner">
-        {/* Search */}
-        <div className="mastery-search">
-          <div className="search-container-profile">
-            <input
-              type="text"
-              placeholder="Name#Tag (e.g. Player#EUW)"
-              value={summonerTag ? `${summonerName}#${summonerTag}` : summonerName}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val.includes('#')) {
-                  const [n, t] = val.split('#');
-                  setSummonerName(n);
-                  setSummonerTag(t);
-                } else {
-                  setSummonerName(val);
-                  setSummonerTag('');
-                }
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button className="search-button-profile" onClick={handleSearch}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
         {/* Tabs */}
         {summonerName && summonerTag && (
           <div className="mastery-tabs">

@@ -1,18 +1,11 @@
-const apikey = import.meta.env.VITE_RIOT_API_KEY;
-import { getPuuid } from './getPuuid.js';
-
-if (!apikey) {
-    throw new Error('Missing VITE_RIOT_API_KEY. Define it in your .env and restart the dev server.');
-}
+const API_BASE = '/api/riot';
 
 export async function getChampionMastery(summonerName, summonerTag, region) {
-    try { 
-        const puuid = await getPuuid(summonerName, summonerTag, region);
-        if (!puuid) throw new Error('Puuid not found');
-
-        const masteryRes = await fetch(`https://${region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}?api_key=${apikey}`);
-        if (!masteryRes.ok) throw new Error('Failed to fetch champion mastery');
-        const champs = await masteryRes.json();
+    try {
+        const params = new URLSearchParams({ summonerName, summonerTag, region });
+        const res = await fetch(`${API_BASE}/champion-mastery?${params}`);
+        if (!res.ok) throw new Error('Failed to fetch champion mastery');
+        const champs = await res.json();
 
         const championData = await import('../utils/DDragon/champion.json'); //swap to use api end point instead of a local file
         const keyToChamp = {};

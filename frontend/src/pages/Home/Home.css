@@ -37,6 +37,7 @@ body {
   display: flex;
   align-items: center;
   gap: 18px;
+  text-decoration: none;
 }
 
 .navbar-nav {

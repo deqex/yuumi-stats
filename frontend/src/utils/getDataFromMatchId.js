@@ -1,21 +1,14 @@
-const apikey = import.meta.env.VITE_RIOT_API_KEY;
+const API_BASE = '/api/riot';
 
-if (!apikey) {
-    throw new Error('Missing VITE_RIOT_API_KEY. Define it in your .env and restart the dev server.');
-}
-
-export async function getDataFromMatchId(matchId) {
+export async function getDataFromMatchId(matchId, region) {
     try {
         if (!matchId) throw new Error('Missing matchId');
 
-        const matchIdDataRes = await fetch(` 
-        https://europe.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apikey}
-            `);
-        if (!matchIdDataRes.ok) throw new Error('Failed to fetch match data');
-        const matchIdData = await matchIdDataRes.json();
-
-        console.log('Match data:', matchIdData);
-        return matchIdData;
+        const params = region ? new URLSearchParams({ region }) : '';
+        const res = await fetch(`${API_BASE}/match/${encodeURIComponent(matchId)}${params ? '?' + params : ''}`);
+        if (!res.ok) throw new Error('Failed to fetch match data');
+        const matchData = await res.json();
+        return matchData;
     } catch (error) {
         console.error('Error:', error);
         return [];

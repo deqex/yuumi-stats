@@ -11,12 +11,51 @@ import QuestMid from '../../utils/DDragon/role-quests/1206.png';
 import QuestSupport from '../../utils/DDragon/role-quests/1208.png';
 import QuestJungle from '../../utils/DDragon/role-quests/1209.png';
 import QuestTop from '../../utils/DDragon/role-quests/1221.png';
+import RankIron from '../../utils/DDragon/ranks/Rank=Iron.png';
+import RankBronze from '../../utils/DDragon/ranks/Rank=Bronze.png';
+import RankSilver from '../../utils/DDragon/ranks/Rank=Silver.png';
+import RankGold from '../../utils/DDragon/ranks/Rank=Gold.png';
+import RankPlatinum from '../../utils/DDragon/ranks/Rank=Platinum.png';
+import RankEmerald from '../../utils/DDragon/ranks/Rank=Emerald.png';
+import RankDiamond from '../../utils/DDragon/ranks/Rank=Diamond.png';
+import RankMaster from '../../utils/DDragon/ranks/Rank=Master.png';
+import RankGrandmaster from '../../utils/DDragon/ranks/Rank=Grandmaster.png';
+import RankChallenger from '../../utils/DDragon/ranks/Rank=Challenger.png';
 import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import dissectGeneralMatchData from '../../utils/dissectGeneralMatchData';
 import { genScore } from '../../utils/genScore';
 import { genBadges } from '../../utils/genBadges';
+import { getSummoner } from '../../utils/getSummoner';
+import { getRanks } from '../../utils/getRanks';
+
+const RANK_ICON_MAP = {
+  IRON: RankIron,
+  BRONZE: RankBronze,
+  SILVER: RankSilver,
+  GOLD: RankGold,
+  PLATINUM: RankPlatinum,
+  EMERALD: RankEmerald,
+  DIAMOND: RankDiamond,
+  MASTER: RankMaster,
+  GRANDMASTER: RankGrandmaster,
+  CHALLENGER: RankChallenger,
+};
+
+const titleCaseTier = (tier) => {
+  if (!tier) return '';
+  return tier
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatRankLabel = (entry) => {
+  if (!entry) return 'Unranked';
+  return `${titleCaseTier(entry.tier)} ${entry.rank} ${entry.leaguePoints} LP`;
+};
 
 export default function MatchHistory() {
   const [summonerName, setSummonerName] = useState('');
@@ -24,6 +63,8 @@ export default function MatchHistory() {
   const [region, setRegion] = useState('euw1');
   const [matches, setMatches] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [summonerData, setSummonerData] = useState(null);
+  const [rankEntries, setRankEntries] = useState([]);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -31,16 +72,21 @@ export default function MatchHistory() {
     if (!name || !tag) return;
     try {
       const matchIds = await getMatchIds(name, tag, regionCode);
-      const matchData = await Promise.all(
-        matchIds.slice(0, 20).map(async (matchId) => {
-          const data = await getDataFromMatchId(matchId);
+      // Process sequentially to avoid hitting Riot API rate limits
+      const matchData = [];
+      for (const matchId of matchIds.slice(0, 5)) {
+        try {
+          const data = await getDataFromMatchId(matchId, regionCode);
+          if (!data || !data.info) continue; // skip failed fetches
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
           const scoredPlayers = await genScore(players, gameInfo);
           const playersWithBadges = await genBadges(scoredPlayers, gameInfo);
-          return { matchId, players: playersWithBadges, gameInfo };
-        })
-      );
+          matchData.push({ matchId, players: playersWithBadges, gameInfo });
+        } catch (e) {
+          console.warn(`Skipping match ${matchId}:`, e);
+        }
+      }
       setMatches(matchData);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
@@ -54,13 +100,15 @@ export default function MatchHistory() {
       setSummonerName(name || '');
       setSummonerTag(tag || '');
       fetchMatches(name, tag, params.region);
+      getSummoner(name, tag, params.region).then(data => {
+        if (data) setSummonerData(data);
+      });
+      getRanks(name, tag, params.region).then(entries => {
+        if (Array.isArray(entries)) setRankEntries(entries);
+        else setRankEntries([]);
+      });
     }
   }, [params]);
-
-  const handleSearch = () => {
-    if (!summonerName || !summonerTag) return;
-    navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`);
-  };
 
   const wins = matches.filter(m => {
     const players = Object.values(m.players);
@@ -74,6 +122,21 @@ export default function MatchHistory() {
   const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
   const DD_SUMMONER_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/spell';
   const DD_RUNE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/img';
+  const DD_PROFILE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/profileicon';
+
+  const profileIconId = summonerData?.profileIconId ?? 588;
+  const soloRank = rankEntries.find(entry => entry.queueType === 'RANKED_SOLO_5x5');
+  const flexRank = rankEntries.find(entry => entry.queueType === 'RANKED_FLEX_SR');
+  const rankSections = [
+    { label: 'Ranked Solo/Duo', entry: soloRank },
+    { label: 'Ranked Flex', entry: flexRank },
+  ];
+
+  const getRankIcon = (entry) => {
+    if (!entry?.tier) return null;
+    return RANK_ICON_MAP[entry.tier.toUpperCase()] || null;
+  };
+  const soloRankIcon = getRankIcon(soloRank);
 
   const SUMMONER_SPELLS = {
     1: 'SummonerBoost',       // Cleanse
@@ -274,18 +337,42 @@ export default function MatchHistory() {
       ? itemSlots.filter(id => id !== adcBootsItem)
       : itemSlots;
 
+    // Format game duration from seconds
+    const durationMin = Math.floor(durationSeconds / 60);
+    const durationSec = durationSeconds % 60;
+    const durationStr = `${durationMin}:${String(durationSec).padStart(2, '0')}`;
+
+    // Calculate how long ago the match was
+    const gameCreation = match.gameInfo?.gameCreation;
+    const timeAgoStr = (() => {
+      if (!gameCreation) return '';
+      const diffMs = Date.now() - gameCreation;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDay = Math.floor(diffHr / 24);
+      if (diffDay < 30) return `${diffDay}d ago`;
+      const diffMonth = Math.floor(diffDay / 30);
+      return `${diffMonth}mo ago`;
+    })();
+
+    // Queue type label
+    const QUEUE_NAMES = { 420: 'Ranked Solo', 440: 'Ranked Flex', 450: 'ARAM', 400: 'Normal Draft', 430: 'Normal Blind' };
+    const queueName = QUEUE_NAMES[match.gameInfo?.queueId] || 'Normal';
+
     return (
       <div key={match.matchId} className={`match-card ${focusPlayer.win ? 'win' : 'loss'}`}>
         {/* Left Section: Game Info */}
         <div className="match-left-section">
           <div className="match-info-text">
-            <div className="game-mode">Ranked Solo</div>
-            <div className="game-time">7 days ago</div>
+            <div className="game-mode">{queueName}</div>
+            <div className="game-time">{timeAgoStr}</div>
             <div className="game-result">
               <span className={`result-status ${focusPlayer.win ? 'win' : 'loss'}`}>
                 {focusPlayer.win ? 'Win' : 'Loss'}
               </span>
-              <span className="result-duration">24:25</span>
+              <span className="result-duration">{durationStr}</span>
             </div>
           </div>
         </div>
@@ -470,60 +557,41 @@ export default function MatchHistory() {
     <div className="match-history-container">
       <Navbar />
       <div className="match-history-inner">
-        {/* Search Section */}
-        <div className="match-history-search">
-          <div className="search-container-profile">
-            <input
-              type="text"
-              placeholder="Summoner Name"
-              value={summonerName}
-              onChange={(e) => setSummonerName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button className="search-button-profile" onClick={handleSearch}>
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#fff"
-                strokeWidth="2.5"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-          </div>
-        </div>
 
         {/* Player Profile Card */}
         {summonerName && matches.length > 0 && (
           <div className="player-profile-card">
             <div className="player-icon-section">
-              <div className="player-main-icon">👤</div>
+              <div className="player-main-icon">
+                <img
+                  src={`${DD_PROFILE_ICON_BASE}/${profileIconId}.png`}
+                  alt="Profile Icon"
+                  style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }}
+                />
+                {summonerData?.summonerLevel != null && (
+                  <div className="player-level-badge">{summonerData.summonerLevel}</div>
+                )}
+              </div>
             </div>
             <div className="player-info">
-              <div className="player-name">{summonerName}#{summonerTag}</div>
-              <div className="player-rank">Grandmaster 852LP</div>
-              <div className="player-stats">
-                <div className="stat-item">
-                  <div className="stat-value">{matches.length}</div>
-                  <div className="stat-label">20 Games</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value" style={{ color: '#059669' }}>
-                    {(matches.reduce((acc, m) => {
-                      const players = Object.values(m.players);
-                      const focusPlayer = players.find(p => (p?.name || '').toLowerCase() === summonerName.toLowerCase());
-                      return acc + (focusPlayer?.kills ?? 0);
-                    }, 0) / matches.length).toFixed(1)}
-                  </div>
-                  <div className="stat-label">KDA</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{winRate}%</div>
-                  <div className="stat-label">WR</div>
-                </div>
+              <div className="player-title">{summonerName}#{summonerTag}</div>
+              <div className="player-ranks">
+                {rankSections.map(({ label, entry }) => {
+                  const iconSrc = getRankIcon(entry);
+                  return (
+                    <div className="rank-entry" key={label}>
+                      {iconSrc ? (
+                        <img src={iconSrc} alt={`${label} icon`} className="rank-icon" />
+                      ) : (
+                        <div className="rank-icon rank-icon-placeholder">-</div>
+                      )}
+                      <div className="rank-text">
+                        <div className="rank-queue">{label}</div>
+                        <div className="rank-value">{formatRankLabel(entry)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div className="performance-stats">
@@ -563,7 +631,7 @@ export default function MatchHistory() {
                   <div className="performance-value">6.8 / 3.1 / 8.1</div>
                 </div>
                 <div className="performance-row">
-                  <div className="performance-label">Al-Score</div>
+                  <div className="performance-label">Avg Al Score</div>
                   <div className="performance-value" style={{ color: '#A78BFA' }}>68%</div>
                 </div>
               </div>

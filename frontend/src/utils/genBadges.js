@@ -42,7 +42,7 @@ export async function genBadges(players, gameInfo) {
         //objectives stolen
         const objectivesStolen = p.objectivesStolen || 0;
         if (objectivesStolen > 0) {
-            p.badges.push("Thief");
+            p.badges.push("Objective Stealer");
         }
 
         
