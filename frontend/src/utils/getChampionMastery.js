@@ -10,20 +10,31 @@ export async function getChampionMastery(summonerName, summonerTag, region) {
         const puuid = await getPuuid(summonerName, summonerTag, region);
         if (!puuid) throw new Error('Puuid not found');
 
-        const masteryRes = await fetch(`https://${region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}/top?count=10&api_key=${apikey}`);
+        const masteryRes = await fetch(`https://${region}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}?api_key=${apikey}`);
         if (!masteryRes.ok) throw new Error('Failed to fetch champion mastery');
         const champs = await masteryRes.json();
 
         const championData = await import('../utils/DDragon/champion.json'); //swap to use api end point instead of a local file
-        const keyToName = {};
+        const keyToChamp = {};
         Object.values(championData.default.data).forEach(champ => {
-            keyToName[champ.key] = champ.name;
+            keyToChamp[champ.key] = {
+                name: champ.name,
+                id: champ.id,
+                title: champ.title,
+                tags: champ.tags,
+            };
         });
         
-        return champs.map(champ => ({
-            ...champ,
-            name: keyToName[champ.championId] || `Champion ${champ.championId}`
-        }));
+        return champs.map(champ => {
+            const info = keyToChamp[champ.championId] || {};
+            return {
+                ...champ,
+                name: info.name || `Champion ${champ.championId}`,
+                championStringId: info.id || '',
+                title: info.title || '',
+                tags: info.tags || [],
+            };
+        });
 
     } catch (error) {
         console.error('Error:', error);

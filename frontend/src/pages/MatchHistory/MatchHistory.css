@@ -277,7 +277,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-right: 28px; /* make card slightly narrower than profile card */
+  padding-right: 0;
 }
 
 /* Match Cards Grid */
@@ -302,6 +302,7 @@ body {
   background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
   border: 1px solid #2d2d44;
   min-height: 70px;
+  width: 880px
 }
 
 .match-card.win {
@@ -331,9 +332,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 20px;
+  min-width: 10px;
   flex-shrink: 0;
-  padding-left: 20px;
+  padding-left: 10px;
 }
 
 .match-info-text {
@@ -344,8 +345,8 @@ body {
 }
 
 .champion-portrait {
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -409,17 +410,35 @@ body {
   font-weight: 600;
 }
 
-/* Runes Section */
-.match-runes-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 5px;
-  padding: 5px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+/* Runes Section (stacked like summoners) */
+.match-runes-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   flex-shrink: 0;
-  margin-left: -20px; /* pull runes + middle cluster left without moving players */
+  margin-left: -16px; /* pull closer to summoner spells */
+}
+
+/* Champion column: KDA above items, aligned with bottom summoner spell */
+.match-champion-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  flex: 1; /* allow stats to center in remaining space */
+}
+
+.match-items-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.match-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 auto; /* center KDA, CS and AI score between items and player list */
 }
 
 /* Summoner Spells */
@@ -431,8 +450,8 @@ body {
 }
 
 .summoner-icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -450,8 +469,8 @@ body {
 }
 
 .rune-slot {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -462,6 +481,11 @@ body {
   font-size: 14px;
 }
 
+.rune-slot-secondary {
+  width: 26px;
+  height: 26px;
+}
+
 .rune-icon-img {
   width: 100%;
   height: 100%;
@@ -470,9 +494,16 @@ body {
   display: block;
 }
 
+.rune-slot-secondary .rune-icon-img {
+  width: 80%;
+  height: 80%;
+}
+
 /* Items Section */
 .match-items-section {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 26px);
+  grid-auto-rows: 26px;
   gap: 4px;
   flex-shrink: 0;
 }
@@ -489,6 +520,18 @@ body {
   font-size: 10px;
   color: #9CA3AF;
   flex-shrink: 0;
+}
+
+.item-icon-quest {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.08);
+  border-radius: 4px;
+}
+
+.item-icon-vision {
+  border-radius: 50%;
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.08);
 }
 
 .item-icon-img {
@@ -519,12 +562,32 @@ body {
   color: #cbd5e1;
 }
 
+.match-cs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 70px;
+}
+
+.cs-value {
+  font-weight: 700;
+  color: #fff;
+  font-size: 12px;
+}
+
+.cs-per-min {
+  font-size: 9px;
+  color: #cbd5e1;
+}
+
+/* KP removed from layout */
+
 /* Score Section */
 .match-score-section {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  margin-left: -8px;
+  margin: 0;
 }
 
 .score-container {
@@ -573,7 +636,6 @@ body {
   align-items: flex-start;
   min-width: 0;
   padding-right: 6px;
-  margin-left: auto; /* keep players docked to the right while others shift left */
 }
 
 .team-column {
@@ -581,7 +643,7 @@ body {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  width: 115px;
+  width: 105px; /* slightly larger player list */
 }
 
 .player-item {
@@ -595,7 +657,7 @@ body {
 }
 
 .player-name {
-  font-size: 9px;
+  font-size: 11px;
   color: #E5E7EB;
   font-weight: 400;
   overflow: hidden;

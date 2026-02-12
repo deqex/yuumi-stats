@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './MatchHistory.css';
 import { Navbar } from '../../components';
+import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
+import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
+import SorceryTreeIcon from '../../utils/DDragon/runes/7202_Sorcery.png';
+import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
+import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
+import QuestMid from '../../utils/DDragon/role-quests/1206.png';
+import QuestSupport from '../../utils/DDragon/role-quests/1208.png';
+import QuestJungle from '../../utils/DDragon/role-quests/1209.png';
+import QuestTop from '../../utils/DDragon/role-quests/1221.png';
 import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
@@ -105,6 +114,14 @@ export default function MatchHistory() {
     8369: 'perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png',
   };
 
+  const RUNE_TREE_ICONS = {
+    8000: PrecisionTreeIcon,
+    8100: DominationTreeIcon,
+    8200: SorceryTreeIcon,
+    8300: InspirationTreeIcon,
+    8400: ResolveTreeIcon,
+  };
+
   const getChampionIconUrl = (name) => {
     if (!name) return null;
     const id = String(name).replace(/[^A-Za-z]/g, '');
@@ -151,7 +168,22 @@ export default function MatchHistory() {
     };
 
     const kda = focusPlayer.kills + focusPlayer.deaths + focusPlayer.assists;
-    const kdaRatio = focusPlayer.deaths > 0 ? (focusPlayer.kills + focusPlayer.assists) / focusPlayer.deaths : focusPlayer.kills + focusPlayer.assists;
+    const kdaRatio = focusPlayer.deaths > 0
+      ? (focusPlayer.kills + focusPlayer.assists) / focusPlayer.deaths
+      : focusPlayer.kills + focusPlayer.assists;
+
+    // CS, CS per minute, and Kill Participation
+    const totalCs = (focusPlayer.totalMinionsKilled || 0) + (focusPlayer.neutralMinionsKilled || 0);
+
+    let durationSeconds = 0;
+    if (typeof focusPlayer.timePlayed === 'number') {
+      durationSeconds = focusPlayer.timePlayed;
+    } else if (match.gameInfo && typeof match.gameInfo.gameDuration === 'number') {
+      durationSeconds = match.gameInfo.gameDuration;
+    }
+
+    const minutesPlayed = durationSeconds > 0 ? durationSeconds / 60 : 0;
+    const csPerMin = minutesPlayed > 0 ? totalCs / minutesPlayed : 0;
 
     // Use AI score computed in genScore.js (opScore) and rank among all players
     const focusAiScore = typeof focusPlayer.opScore === 'number' ? focusPlayer.opScore : null;
@@ -180,6 +212,10 @@ export default function MatchHistory() {
     const primaryKeystoneId = primaryStyle?.selections?.[0]?.perk;
     const primaryRuneIcon = getRuneIconUrl(primaryKeystoneId);
 
+    const secondaryStyle = focusPlayer?.perks?.styles?.find(s => s.description === 'subStyle')
+      || focusPlayer?.perks?.styles?.[1];
+    const secondaryRuneTreeIcon = secondaryStyle?.style ? RUNE_TREE_ICONS[secondaryStyle.style] : null;
+
     const summonerIcons = [
       getSummonerIconUrl(focusPlayer.summoner1Id),
       getSummonerIconUrl(focusPlayer.summoner2Id),
@@ -192,10 +228,51 @@ export default function MatchHistory() {
       focusPlayer.item3,
       focusPlayer.item4,
       focusPlayer.item5,
-      focusPlayer.item6,
     ];
 
-    const displayItems = itemSlots.slice(0, 6);
+    const trinketItem = focusPlayer.item6; // vision / trinket slot
+
+    // Role-quest local icons (not actually in inventory)
+    const QUEST_ICONS = {
+      1206: QuestMid,   // Mid
+      1208: QuestSupport, // Support
+      1209: QuestJungle,  // Jungle
+      1221: QuestTop,   // Top
+    };
+
+    // Boots item IDs (ADC gets boots in the quest slot)
+    const BOOTS_ITEM_IDS = new Set([
+      1001, // Boots
+      3006, // Berserker's Greaves
+      3009, // Boots of Swiftness
+      3020, // Sorcerer's Shoes
+      3047, // Plated Steelcaps
+      3111, // Mercury's Treads
+      3117, // Mobility Boots
+      3158, // Ionian Boots of Lucidity
+    ]);
+
+    const lanePos = (focusPlayer.teamPosition || focusPlayer.individualPosition || '').toUpperCase();
+    const isSupport = lanePos === 'UTILITY';
+    const isJungle = lanePos === 'JUNGLE';
+    const isTop = lanePos === 'TOP';
+    const isMid = lanePos === 'MIDDLE';
+    const isADC = lanePos === 'BOTTOM' && !isSupport;
+
+    const isBootsItem = (id) => id && BOOTS_ITEM_IDS.has(id);
+
+    // For lanes with quests, use fixed quest IDs;
+    // for ADC, show their boots item instead.
+    let questIdForRole = 0;
+    if (isJungle) questIdForRole = 1209;
+    else if (isSupport) questIdForRole = 1208;
+    else if (isTop) questIdForRole = 1221;
+    else if (isMid) questIdForRole = 1206;
+
+    const adcBootsItem = isADC ? (itemSlots.find(id => isBootsItem(id)) || 0) : 0;
+    const displayItems = isADC && adcBootsItem
+      ? itemSlots.filter(id => id !== adcBootsItem)
+      : itemSlots;
 
     return (
       <div key={match.matchId} className={`match-card ${focusPlayer.win ? 'win' : 'loss'}`}>
@@ -213,20 +290,22 @@ export default function MatchHistory() {
           </div>
         </div>
 
-        {/* Runes Section */}
-        <div className="match-runes-section">
-          <div className="rune-slot">
-            {primaryRuneIcon && (
-              <img
-                src={primaryRuneIcon}
-                alt="Keystone rune"
-                className="rune-icon-img"
-              />
-            )}
-          </div>
-          <div className="rune-slot"></div>
-          <div className="rune-slot"></div>
-          <div className="rune-slot"></div>
+        {/* Runes (primary + secondary stacked) */}
+        <div className="match-runes-stack">
+          {[primaryRuneIcon, secondaryRuneTreeIcon].map((src, idx) => (
+            <div
+              key={idx}
+              className={idx === 0 ? 'rune-slot' : 'rune-slot rune-slot-secondary'}
+            >
+              {src && (
+                <img
+                  src={src}
+                  alt={idx === 0 ? 'Keystone rune' : 'Secondary rune path'}
+                  className="rune-icon-img"
+                />
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Summoner Spells */}
@@ -255,41 +334,82 @@ export default function MatchHistory() {
           )}
         </div>
 
-        <div className="game-champion-status">
-        </div>
+        {/* Champion stats and items: items on left, stats on right */}
+        <div className="match-champion-column">
+          <div className="match-items-stats-row">
+            {/* Items Section */}
+            <div className="match-items-section">
+              {displayItems.map((itemId, idx) => {
+                const src = getItemIconUrl(itemId);
+                return (
+                  <div key={idx} className="item-icon">
+                    {src && (
+                      <img
+                        src={src}
+                        alt={itemId ? `Item ${itemId}` : 'Empty slot'}
+                        className="item-icon-img"
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
-        {/* Items Section */}
-        <div className="match-items-section">
-          {displayItems.map((itemId, idx) => {
-            const src = getItemIconUrl(itemId);
-            return (
-              <div key={idx} className="item-icon">
-                {src && (
+              {/* Quest item slot */}
+              <div className="item-icon item-icon-quest" title="Role quest">
+                {(() => {
+                  const questSrc = isADC
+                    ? (adcBootsItem ? getItemIconUrl(adcBootsItem) : null)
+                    : (questIdForRole ? QUEST_ICONS[questIdForRole] : null);
+
+                  return questSrc ? (
+                    <img
+                      src={questSrc}
+                      alt={isADC
+                        ? (adcBootsItem ? `ADC boots ${adcBootsItem}` : 'No boots')
+                        : (questIdForRole ? `Quest ${questIdForRole}` : 'No quest')}
+                      className="item-icon-img"
+                    />
+                  ) : null;
+                })()}
+              </div>
+
+              {/* Vision / trinket slot */}
+              <div className="item-icon item-icon-vision" title="Trinket">
+                {getItemIconUrl(trinketItem) && (
                   <img
-                    src={src}
-                    alt={itemId ? `Item ${itemId}` : 'Empty slot'}
+                    src={getItemIconUrl(trinketItem)}
+                    alt={trinketItem ? `Trinket ${trinketItem}` : 'No trinket'}
                     className="item-icon-img"
                   />
                 )}
               </div>
-            );
-          })}
-        </div>
-
-        {/* KDA Section */}
-        <div className="match-kda-section">
-          <div className="kda-value">{focusPlayer.kills} / {focusPlayer.deaths} / {focusPlayer.assists}</div>
-          <div className="kda-ratio">{kdaRatio.toFixed(2)} KDA</div>
-        </div>
-
-        {/* AI Score & Position */}
-        <div className="match-score-section">
-          <div className="score-container">
-            <div className="ai-score-badge">
-              <span className="score-value">{roundedAiScore !== null ? roundedAiScore : '-'}</span>
             </div>
-            <div className="position-badge">
-              <span className="position-value">{placementLabel}</span>
+
+            {/* Stats Section centered between items and player list */}
+            <div className="match-stats-row">
+              {/* KDA Section */}
+              <div className="match-kda-section">
+                <div className="kda-value">{focusPlayer.kills} / {focusPlayer.deaths} / {focusPlayer.assists}</div>
+                <div className="kda-ratio">{kdaRatio.toFixed(2)} KDA</div>
+              </div>
+
+              {/* CS Section */}
+              <div className="match-cs-section">
+                <div className="cs-value">{totalCs} CS</div>
+                <div className="cs-per-min">{csPerMin.toFixed(1)} cs/min</div>
+              </div>
+
+              {/* AI Score & Position */}
+              <div className="match-score-section">
+                <div className="score-container">
+                  <div className="ai-score-badge">
+                    <span className="score-value">{roundedAiScore !== null ? roundedAiScore : '-'}</span>
+                  </div>
+                  <div className="position-badge">
+                    <span className="position-value">{placementLabel}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -501,6 +621,17 @@ export default function MatchHistory() {
                   onClick={() => setActiveTab('aram')}
                 >
                   ARAM
+                </button>
+                <button
+                  className={`tab-button ${activeTab === 'mastery' ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveTab('mastery');
+                    if (summonerName && summonerTag) {
+                      navigate(`/profile/${region}/${summonerName}-${summonerTag}/mastery`);
+                    }
+                  }}
+                >
+                  Mastery
                 </button>
               </div>
 
