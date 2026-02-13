@@ -570,6 +570,30 @@ export default function MatchHistory() {
       <Navbar />
       <div className="match-history-inner">
 
+        {/* Profile navigation tabs */}
+        {summonerName && summonerTag && (
+          <div className="profile-tabs">
+            <button
+              className={`profile-tab-button active`}
+              onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`)}
+            >
+              Overview
+            </button>
+            <button
+              className="profile-tab-button"
+              onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/mastery`)}
+            >
+              Mastery
+            </button>
+            <button className="profile-tab-button disabled">
+              Analysis
+            </button>
+            <button className="profile-tab-button disabled">
+              Live game
+            </button>
+          </div>
+        )}
+
         {/* Player Profile Card */}
         {summonerName && matches.length > 0 && (
           <div className="player-profile-card">
@@ -701,17 +725,6 @@ export default function MatchHistory() {
                   onClick={() => setActiveTab('aram')}
                 >
                   ARAM
-                </button>
-                <button
-                  className={`tab-button ${activeTab === 'mastery' ? 'active' : ''}`}
-                  onClick={() => {
-                    setActiveTab('mastery');
-                    if (summonerName && summonerTag) {
-                      navigate(`/profile/${region}/${summonerName}-${summonerTag}/mastery`);
-                    }
-                  }}
-                >
-                  Mastery
                 </button>
               </div>
 

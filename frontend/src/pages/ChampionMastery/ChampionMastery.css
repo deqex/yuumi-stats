@@ -241,23 +241,22 @@
   font-size: 14px;
 }
 
-/* Tabs row (matching MatchHistory style) */
-.mastery-tabs {
+/* Profile Tabs (Overview / Mastery / etc. - shared with MatchHistory) */
+.profile-tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 4px;
-  flex-wrap: wrap;
+  gap: 24px;
+  margin: 0 0 4px 2px;
   padding-bottom: 12px;
   border-bottom: 1px solid #E5E7EB;
 }
 
-.mastery-tab-button {
-  padding: 8px 16px;
+.profile-tab-button {
+  padding: 10px 0;
   border: none;
   background: transparent;
   color: #6B7280;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 2px solid transparent;
@@ -265,13 +264,22 @@
   font-family: 'Lexend', sans-serif;
 }
 
-.mastery-tab-button:hover {
-  color: #111;
+.profile-tab-button:hover {
+  color: #111827;
 }
 
-.mastery-tab-button.active {
+.profile-tab-button.active {
   color: #A78BFA;
   border-bottom-color: #A78BFA;
+}
+
+.profile-tab-button.disabled {
+  color: #D1D5DB;
+  cursor: default;
+}
+
+.profile-tab-button.disabled:hover {
+  color: #D1D5DB;
 }
 
 /* Search bar (reuse from MatchHistory) */

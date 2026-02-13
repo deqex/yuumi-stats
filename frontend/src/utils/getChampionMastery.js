@@ -1,4 +1,4 @@
-const API_BASE = '/api/riot';
+const API_BASE = '/api/mastery';
 
 export async function getChampionMastery(summonerName, summonerTag, region) {
     try {

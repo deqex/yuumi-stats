@@ -87,17 +87,23 @@ export default function ChampionMastery() {
     <div className="mastery-container">
       <Navbar />
       <div className="mastery-inner">
-        {/* Tabs */}
+        {/* Profile navigation tabs (shared with MatchHistory) */}
         {summonerName && summonerTag && (
-          <div className="mastery-tabs">
+          <div className="profile-tabs">
             <button
-              className="mastery-tab-button"
+              className="profile-tab-button"
               onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`)}
             >
               Overview
             </button>
-            <button className="mastery-tab-button active">
+            <button className="profile-tab-button active">
               Mastery
+            </button>
+            <button className="profile-tab-button disabled">
+              Analysis
+            </button>
+            <button className="profile-tab-button disabled">
+              Live game
             </button>
           </div>
         )}

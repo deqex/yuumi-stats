@@ -1,10 +1,18 @@
 import express from "express";
-import { getRecentMatches } from "../controllers/matchesController.js";
-import { postMatch } from "../controllers/matchesController.js";
+import {
+    getMatchIds,
+    getMatchData,
+    getPuuid,
+    getSummoner,
+    getRankEntries,
+} from "../controllers/matchesController.js";
 
 const router = express.Router();
 
-router.get("/", getRecentMatches);
-router.post("/", postMatch);
+router.get("/puuid", getPuuid);
+router.get("/summoner", getSummoner);
+router.get("/ranks", getRankEntries);
+router.get("/match-ids", getMatchIds);
+router.get("/match/:matchId", getMatchData);
 
 export default router;

@@ -1,4 +1,4 @@
-const API_BASE = '/api/riot';
+const API_BASE = '/api/matches';
 
 export async function getMatchIds(summonerName, summonerTag, region) {
     try {

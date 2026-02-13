@@ -34,20 +34,35 @@ const matchSchema = new mongoose.Schema({
   participantSummaries: [{
     puuid: { type: String, required: true, index: true },
     championId: { type: Number, required: true },
+    championName: { type: String, required: true },
     role: { 
       type: String, 
       enum: ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'SUPPORT'],
       required: true
     },
+    roleQuestId: { type: Number, default: null },
     win: { type: Boolean, required: true },
     kills: { type: Number, required: true },
     deaths: { type: Number, required: true },
     assists: { type: Number, required: true },
     totalMinionsKilled: { type: Number, default: 0 },
+    champExperience: { type: Number, default: 0 },
     goldEarned: { type: Number, default: 0 },
-    damageDealtToChampions: { type: Number, default: 0 },
+    totalDamageDealtToChampions: { type: Number, default: 0 },
+    totalDamageShieldedOnTeammates: { type: Number, default: 0 },
+    totalHealsOnTeammates: { type: Number, default: 0 },
+    totalDamageTaken: { type: Number, default: 0 },
+    damageSelfMitigated: { type: Number, default: 0 },
+    timeCCingOthers: { type: Number, default: 0 },
     visionScore: { type: Number, default: 0 },
-    items: [Number],  // Simplified array of item IDs
+    enemyMissingPings: { type: Number, default: 0 },
+    enemyVisionPings: { type: Number, default: 0 },
+    firstTowerKill: { type: Boolean, default: false },
+    firstBloodKill: { type: Boolean, default: false },
+    firstBloodAssist: { type: Boolean, default: false },
+    largestMultiKill: { type: Number, default: 0 },
+    objectivesStolen: { type: Number, default: 0 },
+    items: [Number], 
     summonerSpells: [Number]
   }]
 }, {
