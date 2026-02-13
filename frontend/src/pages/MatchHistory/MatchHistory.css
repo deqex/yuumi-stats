@@ -759,6 +759,16 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Match Card Wrapper */
+.match-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.match-card.expanded {
+  border-radius: 7px 7px 0 0;
+}
+
 /* Expand Icon */
 .match-expand-icon {
   display: flex;
@@ -768,6 +778,11 @@ body {
   flex-shrink: 0;
   width: 22px;
   font-size: 16px;
+  transition: transform 0.25s ease;
+}
+
+.match-expand-icon.rotated {
+  transform: rotate(180deg);
 }
 
 /* Search Bar at Top */

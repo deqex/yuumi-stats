@@ -29,6 +29,7 @@ import { genScore } from '../../utils/genScore';
 import { genBadges } from '../../utils/genBadges';
 import { getSummoner } from '../../utils/getSummoner';
 import { getRanks } from '../../utils/getRanks';
+import MatchDetail from '../../components/MatchDetail/MatchDetail';
 
 const RANK_ICON_MAP = {
   IRON: RankIron,
@@ -65,6 +66,7 @@ export default function MatchHistory() {
   const [activeTab, setActiveTab] = useState('all');
   const [summonerData, setSummonerData] = useState(null);
   const [rankEntries, setRankEntries] = useState([]);
+  const [expandedMatchId, setExpandedMatchId] = useState(null);
   const params = useParams();
   const navigate = useNavigate();
 
@@ -361,8 +363,14 @@ export default function MatchHistory() {
     const QUEUE_NAMES = { 420: 'Ranked Solo', 440: 'Ranked Flex', 450: 'ARAM', 400: 'Normal Draft', 430: 'Normal Blind' };
     const queueName = QUEUE_NAMES[match.gameInfo?.queueId] || 'Normal';
 
+    const isExpanded = expandedMatchId === match.matchId;
+
     return (
-      <div key={match.matchId} className={`match-card ${focusPlayer.win ? 'win' : 'loss'}`}>
+      <div key={match.matchId} className="match-card-wrapper">
+      <div
+        className={`match-card ${focusPlayer.win ? 'win' : 'loss'} ${isExpanded ? 'expanded' : ''}`}
+        onClick={() => setExpandedMatchId(isExpanded ? null : match.matchId)}
+      >
         {/* Left Section: Game Info */}
         <div className="match-left-section">
           <div className="match-info-text">
@@ -544,11 +552,15 @@ export default function MatchHistory() {
         </div>
 
         {/* Expand Arrow */}
-        <div className="match-expand-icon">
+        <div className={`match-expand-icon ${isExpanded ? 'rotated' : ''}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
+            <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </div>
+      </div>
+      {isExpanded && (
+        <MatchDetail match={match} focusName={summonerName} />
+      )}
       </div>
     );
   };

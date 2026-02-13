@@ -1,0 +1,467 @@
+/* ── Match Detail Expanded Scoreboard ── */
+
+.match-detail-panel {
+  background: #0f1923;
+  border-radius: 0 0 7px 7px;
+  overflow: hidden;
+  border: 1px solid #1e2a3a;
+  border-top: none;
+  margin-top: -2px;
+  width: 900px;
+  /* Extra breathing room at the far right edge */
+  animation: detailSlideDown 0.25s ease-out;
+
+}
+
+@keyframes detailSlideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* ── Team Section ── */
+.md-team-section {
+  border-bottom: 1px solid #1a2738;
+}
+
+.md-team-section:last-child {
+  border-bottom: none;
+}
+
+/* ── Team Header ── */
+.md-team-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.md-team-header.md-team-win {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.15) 0%, rgba(15, 25, 35, 0) 60%);
+  border-left: 3px solid #3b82f6;
+}
+
+.md-team-header.md-team-lose {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 25, 35, 0) 60%);
+  border-left: 3px solid #ef4444;
+}
+
+.md-team-result {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.md-team-win .md-team-result {
+  color: #60a5fa;
+}
+
+.md-team-lose .md-team-result {
+  color: #f87171;
+}
+
+.md-team-label {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.md-team-title {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 0 0 230px;
+  min-width: 0;
+}
+
+.md-header-row {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.md-header-champion {
+  flex: 0 0 230px;
+}
+
+.md-header-col {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.md-header-col-score { width: 80px; }
+.md-header-col-kda   { width: 90px; }
+.md-header-col-dmg   { width: 100px; }
+.md-header-col-cs    { width: 70px; }
+.md-header-col-kp    { width: 50px; }
+.md-header-col-items { margin-left: auto; }
+
+/* ── Player Row ── */
+.md-player-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  gap: 0;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-left: 3px solid transparent;
+}
+
+.md-player-row:last-child {
+  border-bottom: none;
+}
+
+/* Blue team rows */
+.md-blue .md-player-row {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.md-blue .md-player-row:hover {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+/* Red team rows */
+.md-red .md-player-row {
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.md-red .md-player-row:hover {
+  background: rgba(239, 68, 68, 0.13);
+}
+
+.md-player-row.md-focus {
+  background: rgba(167, 139, 250, 0.12) !important;
+}
+
+/* ── Champion Cell ── */
+.md-champion-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Keep this column compact so it doesn't push
+     AI-score / items off the right side. */
+  flex: 0 0 230px;
+  max-width: 230px;
+  min-width: 0;
+}
+
+.md-champ-icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.md-champ-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.md-champ-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.md-champ-level {
+  position: absolute;
+  bottom: -4px;
+  left: -4px;
+  background: #1a1a2e;
+  color: #e5e7eb;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid #2d2d44;
+  line-height: 1;
+}
+
+.md-player-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Summoner Spells & Runes (2x2 grid between champ and name) ── */
+.md-spells-runes {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.md-spell-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.md-mini-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.md-mini-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+}
+
+.md-rune-primary {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.md-rune-secondary {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.md-rune-secondary img {
+  width: 80%;
+  height: 80%;
+  margin: 10%;
+}
+
+.md-player-name {
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.md-name-focus {
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+.md-player-tag {
+  color: #4b5563;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ── AI Score Cell ── */
+.md-score-cell {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.md-score-value {
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.md-score-value.score-high { color: #f87171; }
+.md-score-value.score-mid  { color: #fbbf24; }
+.md-score-value.score-low  { color: #9ca3af; }
+
+.md-score-placement {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* ── KDA Cell ── */
+.md-kda-cell {
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.md-kda-numbers {
+  color: #e5e7eb;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.md-kda-ratio {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.md-kda-ratio.kda-perfect {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+.md-kda-ratio.kda-excellent {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.md-kda-ratio.kda-good {
+  color: #60a5fa;
+}
+
+/* ── Damage Cell ── */
+.md-damage-cell {
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.md-damage-value {
+  color: #e5e7eb;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.md-damage-bar-track {
+  width: 80px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.md-damage-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #f87171, #ef4444);
+  transition: width 0.3s ease;
+}
+
+.md-blue .md-damage-bar-fill {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+.md-red .md-damage-bar-fill {
+  background: linear-gradient(90deg, #f87171, #ef4444);
+}
+
+/* ── CS Cell ── */
+.md-cs-cell {
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.md-cs-value {
+  color: #e5e7eb;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.md-cs-permin {
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ── KP Cell ── */
+.md-kp-cell {
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.md-kp-value {
+  color: #9ca3af;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.md-kp-value.kp-high {
+  color: #34d399;
+}
+
+.md-kp-value.kp-mid {
+  color: #60a5fa;
+}
+
+/* ── Items Cell ── */
+.md-items-cell {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.md-item-slot {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.md-item-trinket {
+  border-radius: 50%;
+  border-color: rgba(96, 165, 250, 0.25);
+  background: rgba(96, 165, 250, 0.06);
+  margin-left: 4px;
+}
+
+.md-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+}
+
+/* Role quest slot (same size as regular items but with subtle highlight) */
+.md-item-quest {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.09);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1060px) {
+  .match-detail-panel {
+    width: 100%;
+  }
+
+  .md-player-name {
+    max-width: 100px;
+  }
+
+  .md-items-cell {
+    width: 150px;
+  }
+}
