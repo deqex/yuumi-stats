@@ -29,6 +29,7 @@ import { genScore } from '../../utils/genScore';
 import { genBadges } from '../../utils/genBadges';
 import { getSummoner } from '../../utils/getSummoner';
 import { getRanks } from '../../utils/getRanks';
+import { getProfile } from '../../utils/getProfile';
 import MatchDetail from '../../components/MatchDetail/MatchDetail';
 
 const RANK_ICON_MAP = {
@@ -102,12 +103,11 @@ export default function MatchHistory() {
       setSummonerName(name || '');
       setSummonerTag(tag || '');
       fetchMatches(name, tag, params.region);
-      getSummoner(name, tag, params.region).then(data => {
-        if (data) setSummonerData(data);
-      });
-      getRanks(name, tag, params.region).then(entries => {
-        if (Array.isArray(entries)) setRankEntries(entries);
-        else setRankEntries([]);
+      getProfile(name, tag, params.region).then(profile => {
+        if (profile) {
+          setSummonerData({ profileIconId: profile.icon, summonerLevel: profile.summonerLevel });
+          setRankEntries(profile.ranks || []);
+        }
       });
     }
   }, [params]);
