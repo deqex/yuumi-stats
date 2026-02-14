@@ -173,7 +173,6 @@ export async function getMatchIds(req, res) {
 
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
 
-        // DB-first: return cached match IDs from DB (skip if forceUpdate)
         if (forceUpdate !== 'true') {
             const cachedMatches = await Match.find({ "participantSummaries.puuid": puuid })
                 .sort({ gameCreation: -1 })
@@ -186,7 +185,6 @@ export async function getMatchIds(req, res) {
             }
         }
 
-        // Cache miss or forceUpdate – call Riot API
         const broadRegion = getBroadRegion(region);
         console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region})`);
         const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5&api_key=${getApiKey()}`;
@@ -210,13 +208,10 @@ export async function getMatchData(req, res) {
             return res.status(400).json({ error: "matchId is required" });
         }
 
-        // DB-first: check for cached match data (skip if forceUpdate)
         if (forceUpdate !== 'true') {
             const cached = await Match.findOne({ matchId }).lean();
             if (cached) {
                 console.log(`[DB] match ${matchId}`);
-                // Reshape DB document to match the Riot API response format
-                // so the frontend doesn't need separate handling
                 const { participantSummaries, matchId: id, region: _r, _id, __v, ...gameFields } = cached;
                 return res.json({
                     metadata: { matchId: id },
@@ -228,7 +223,6 @@ export async function getMatchData(req, res) {
             }
         }
 
-        // Cache miss – call Riot API
         console.log(`[API] fetching match ${matchId}`);
         const broadRegion = region ? getBroadRegion(region) : "europe";
 

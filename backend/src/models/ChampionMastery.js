@@ -28,7 +28,6 @@ const championMasterySchema = new mongoose.Schema({
   },
 }, { timestamps: false, collection: "mastery" });
 
-// One mastery document per player+region combo
 championMasterySchema.index({ puuid: 1, region: 1 }, { unique: true });
 
 const ChampionMastery = mongoose.model("ChampionMastery", championMasterySchema);

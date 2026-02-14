@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// matchSummary.schema.js
 const matchSchema = new mongoose.Schema({
   matchId: { 
     type: String, 

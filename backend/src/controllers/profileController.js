@@ -77,8 +77,6 @@ async function saveProfileToDb(summonerName, puuid, icon, rankEntries, summonerL
     return profile;
 }
 
-const PROFILE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-
 export async function getProfile(req, res) {
     try {
         const { summonerName, summonerTag, region, forceUpdate } = req.query;
@@ -88,7 +86,6 @@ export async function getProfile(req, res) {
 
         const fullName = `${summonerName}#${summonerTag}`;
 
-        // DB-first: check for a cached profile (skip if forceUpdate)
         if (forceUpdate !== 'true') {
             const cached = await Profile.findOne({ summonerName: fullName });
             if (cached) {
@@ -103,7 +100,6 @@ export async function getProfile(req, res) {
             }
         }
 
-        // Cache miss or stale – call Riot API
         console.log(`[API] fetching profile for ${fullName} (${region})`);
         const puuid = await fetchPuuid(summonerName, summonerTag, region);
         const [summoner, rankEntries] = await Promise.all([
