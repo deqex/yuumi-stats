@@ -13,16 +13,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Log every incoming request
-app.use((req, res, next) => {
-  const { summonerName, summonerTag, region, matchId } = { ...req.query, ...req.params };
-  const who = summonerName ? `${summonerName}#${summonerTag}` : matchId || '';
-  const where = region ? ` (${region})` : '';
-  const route = req.path.split('/').filter(Boolean).pop() || req.path;
-  console.log(`[${route}] ${who}${where}`);
-  next();
-});
-
 app.use("/api/matches", matchesRoutes);
 app.use("/api/mastery", masteryRoutes);
 app.use("/api/profile", profileRoutes);

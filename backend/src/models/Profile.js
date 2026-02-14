@@ -25,6 +25,10 @@ const profileSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  summonerLevel: {
+    type: Number,
+    default: 0,
+  },
   ranks: [rankSchema],
   lastUpdated: {
     type: Date,

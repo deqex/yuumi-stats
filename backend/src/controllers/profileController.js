@@ -50,7 +50,7 @@ async function fetchRanks(puuid, region) {
     return await res.json();
 }
 
-async function saveProfileToDb(summonerName, puuid, icon, rankEntries) {
+async function saveProfileToDb(summonerName, puuid, icon, rankEntries, summonerLevel) {
     const ranks = rankEntries.map((e) => ({
         queueType: e.queueType,
         tier: e.tier,
@@ -67,6 +67,7 @@ async function saveProfileToDb(summonerName, puuid, icon, rankEntries) {
             puuid,
             icon,
             ranks,
+            summonerLevel,
             lastUpdated: new Date(),
         },
         { upsert: true, new: true }
@@ -76,13 +77,34 @@ async function saveProfileToDb(summonerName, puuid, icon, rankEntries) {
     return profile;
 }
 
+const PROFILE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 export async function getProfile(req, res) {
     try {
-        const { summonerName, summonerTag, region } = req.query;
+        const { summonerName, summonerTag, region, forceUpdate } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
+        const fullName = `${summonerName}#${summonerTag}`;
+
+        // DB-first: check for a cached profile (skip if forceUpdate)
+        if (forceUpdate !== 'true') {
+            const cached = await Profile.findOne({ summonerName: fullName });
+            if (cached) {
+                console.log(`[DB] profile for ${fullName}`);
+                return res.json({
+                    summonerName: cached.summonerName,
+                    puuid: cached.puuid,
+                    icon: cached.icon,
+                    ranks: cached.ranks,
+                    summonerLevel: cached.summonerLevel,
+                });
+            }
+        }
+
+        // Cache miss or stale – call Riot API
+        console.log(`[API] fetching profile for ${fullName} (${region})`);
         const puuid = await fetchPuuid(summonerName, summonerTag, region);
         const [summoner, rankEntries] = await Promise.all([
             fetchSummoner(puuid, region),
@@ -90,10 +112,11 @@ export async function getProfile(req, res) {
         ]);
 
         const profile = await saveProfileToDb(
-            `${summonerName}#${summonerTag}`,
+            fullName,
             puuid,
             summoner.profileIconId,
-            rankEntries
+            rankEntries,
+            summoner.summonerLevel
         );
 
         return res.json({
@@ -101,7 +124,7 @@ export async function getProfile(req, res) {
             puuid: profile.puuid,
             icon: profile.icon,
             ranks: profile.ranks,
-            summonerLevel: summoner.summonerLevel,
+            summonerLevel: profile.summonerLevel,
         });
     } catch (error) {
         console.error("getProfile error:", error);

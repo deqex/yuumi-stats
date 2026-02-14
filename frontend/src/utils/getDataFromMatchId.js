@@ -1,11 +1,14 @@
 const API_BASE = '/api/matches';
 
-export async function getDataFromMatchId(matchId, region) {
+export async function getDataFromMatchId(matchId, region, forceUpdate = false) {
     try {
         if (!matchId) throw new Error('Missing matchId');
 
-        const params = region ? new URLSearchParams({ region }) : '';
-        const res = await fetch(`${API_BASE}/match/${encodeURIComponent(matchId)}${params ? '?' + params : ''}`);
+        const params = new URLSearchParams();
+        if (region) params.set('region', region);
+        if (forceUpdate) params.set('forceUpdate', 'true');
+        const qs = params.toString();
+        const res = await fetch(`${API_BASE}/match/${encodeURIComponent(matchId)}${qs ? '?' + qs : ''}`);
         if (!res.ok) throw new Error('Failed to fetch match data');
         const matchData = await res.json();
         return matchData;

@@ -66,8 +66,13 @@ async function saveMatchToDb(matchData, region) {
 
         const participantSummaries = info.participants.map((p) => ({
             puuid: p.puuid,
+            riotIdGameName: p.riotIdGameName ?? '',
+            riotIdTagline: p.riotIdTagline ?? '',
             championId: p.championId,
             championName: p.championName,
+            teamId: p.teamId,
+            teamPosition: p.teamPosition ?? '',
+            individualPosition: p.individualPosition ?? '',
             role: POSITION_TO_ROLE[p.teamPosition] || "MIDDLE",
             roleQuestId: POSITION_TO_QUEST_ID[p.teamPosition] ?? null,
             win: p.win,
@@ -75,6 +80,7 @@ async function saveMatchToDb(matchData, region) {
             deaths: p.deaths,
             assists: p.assists,
             totalMinionsKilled: p.totalMinionsKilled ?? 0,
+            neutralMinionsKilled: p.neutralMinionsKilled ?? 0,
             champExperience: p.champExperience ?? 0,
             goldEarned: p.goldEarned ?? 0,
             totalDamageDealtToChampions: p.totalDamageDealtToChampions ?? 0,
@@ -83,6 +89,7 @@ async function saveMatchToDb(matchData, region) {
             totalDamageTaken: p.totalDamageTaken ?? 0,
             damageSelfMitigated: p.damageSelfMitigated ?? 0,
             timeCCingOthers: p.timeCCingOthers ?? 0,
+            timePlayed: p.timePlayed ?? 0,
             visionScore: p.visionScore ?? 0,
             enemyMissingPings: p.enemyMissingPings ?? 0,
             enemyVisionPings: p.enemyVisionPings ?? 0,
@@ -91,8 +98,16 @@ async function saveMatchToDb(matchData, region) {
             firstBloodAssist: p.firstBloodAssist ?? false,
             largestMultiKill: p.largestMultiKill ?? 0,
             objectivesStolen: p.objectivesStolen ?? 0,
-            items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6],
-            summonerSpells: [p.summoner1Id, p.summoner2Id],
+            item0: p.item0 ?? 0,
+            item1: p.item1 ?? 0,
+            item2: p.item2 ?? 0,
+            item3: p.item3 ?? 0,
+            item4: p.item4 ?? 0,
+            item5: p.item5 ?? 0,
+            item6: p.item6 ?? 0,
+            summoner1Id: p.summoner1Id ?? 0,
+            summoner2Id: p.summoner2Id ?? 0,
+            perks: p.perks ?? null,
         }));
 
         const regionCode = (region || info.platformId || "").toUpperCase();
@@ -151,14 +166,29 @@ async function fetchPuuid(summonerName, summonerTag, region) {
 
 export async function getMatchIds(req, res) {
     try {
-        const { summonerName, summonerTag, region } = req.query;
+        const { summonerName, summonerTag, region, forceUpdate } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
-        const broadRegion = getBroadRegion(region);
 
+        // DB-first: return cached match IDs from DB (skip if forceUpdate)
+        if (forceUpdate !== 'true') {
+            const cachedMatches = await Match.find({ "participantSummaries.puuid": puuid })
+                .sort({ gameCreation: -1 })
+                .limit(5)
+                .select('matchId');
+            if (cachedMatches.length > 0) {
+                const matchIds = cachedMatches.map(m => m.matchId);
+                console.log(`[DB] match IDs for ${summonerName}#${summonerTag} (${matchIds.length} matches)`);
+                return res.json(matchIds);
+            }
+        }
+
+        // Cache miss or forceUpdate – call Riot API
+        const broadRegion = getBroadRegion(region);
+        console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region})`);
         const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5&api_key=${getApiKey()}`;
         const matchRes = await riotFetch(url);
         if (!matchRes.ok) throw new Error(`Riot API error (matchIds): ${matchRes.status}`);
@@ -175,12 +205,31 @@ export async function getMatchIds(req, res) {
 export async function getMatchData(req, res) {
     try {
         const { matchId } = req.params;
-        const { region } = req.query;
+        const { region, forceUpdate } = req.query;
         if (!matchId) {
             return res.status(400).json({ error: "matchId is required" });
         }
 
-        
+        // DB-first: check for cached match data (skip if forceUpdate)
+        if (forceUpdate !== 'true') {
+            const cached = await Match.findOne({ matchId }).lean();
+            if (cached) {
+                console.log(`[DB] match ${matchId}`);
+                // Reshape DB document to match the Riot API response format
+                // so the frontend doesn't need separate handling
+                const { participantSummaries, matchId: id, region: _r, _id, __v, ...gameFields } = cached;
+                return res.json({
+                    metadata: { matchId: id },
+                    info: {
+                        ...gameFields,
+                        participants: participantSummaries
+                    }
+                });
+            }
+        }
+
+        // Cache miss – call Riot API
+        console.log(`[API] fetching match ${matchId}`);
         const broadRegion = region ? getBroadRegion(region) : "europe";
 
         const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${getApiKey()}`;
@@ -188,7 +237,6 @@ export async function getMatchData(req, res) {
         if (!matchRes.ok) throw new Error(`Riot API error (matchData): ${matchRes.status}`);
         const matchData = await matchRes.json();
 
-    
         saveMatchToDb(matchData, region);
 
         return res.json(matchData);

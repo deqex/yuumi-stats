@@ -68,18 +68,19 @@ export default function MatchHistory() {
   const [summonerData, setSummonerData] = useState(null);
   const [rankEntries, setRankEntries] = useState([]);
   const [expandedMatchId, setExpandedMatchId] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const params = useParams();
   const navigate = useNavigate();
 
-  const fetchMatches = async (name, tag, regionCode) => {
+  const fetchMatches = async (name, tag, regionCode, forceUpdate = false) => {
     if (!name || !tag) return;
     try {
-      const matchIds = await getMatchIds(name, tag, regionCode);
+      const matchIds = await getMatchIds(name, tag, regionCode, forceUpdate);
       // Process sequentially to avoid hitting Riot API rate limits
       const matchData = [];
       for (const matchId of matchIds.slice(0, 5)) {
         try {
-          const data = await getDataFromMatchId(matchId, regionCode);
+          const data = await getDataFromMatchId(matchId, regionCode, forceUpdate);
           if (!data || !data.info) continue; // skip failed fetches
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
@@ -111,6 +112,25 @@ export default function MatchHistory() {
       });
     }
   }, [params]);
+
+  const handleUpdate = async () => {
+    if (isUpdating || !summonerName || !summonerTag) return;
+    setIsUpdating(true);
+    try {
+      const profilePromise = getProfile(summonerName, summonerTag, region, true).then(profile => {
+        if (profile) {
+          setSummonerData({ profileIconId: profile.icon, summonerLevel: profile.summonerLevel });
+          setRankEntries(profile.ranks || []);
+        }
+      });
+      const matchesPromise = fetchMatches(summonerName, summonerTag, region, true);
+      await Promise.all([profilePromise, matchesPromise]);
+    } catch (err) {
+      console.error('Update failed:', err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const wins = matches.filter(m => {
     const players = Object.values(m.players);
@@ -611,6 +631,13 @@ export default function MatchHistory() {
             </div>
             <div className="player-info">
               <div className="player-title">{summonerName}#{summonerTag}</div>
+              <button
+                className={`update-button${isUpdating ? ' updating' : ''}`}
+                onClick={handleUpdate}
+                disabled={isUpdating}
+              >
+                {isUpdating ? 'Updating...' : 'Update'}
+              </button>
               <div className="player-ranks">
                 {rankSections.map(({ label, entry }) => {
                   const iconSrc = getRankIcon(entry);

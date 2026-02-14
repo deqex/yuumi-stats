@@ -86,15 +86,28 @@ async function saveMasteryToDb(puuid, region, champs) {
     console.log(`Saved mastery for ${puuid} (${region}) – ${champions.length} champions`);
 }
 
+const MASTERY_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 export async function getChampionMastery(req, res) {
     try {
-        const { summonerName, summonerTag, region } = req.query;
+        const { summonerName, summonerTag, region, forceUpdate } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
 
+        // DB-first: check for cached mastery data (skip if forceUpdate)
+        if (forceUpdate !== 'true') {
+            const cached = await ChampionMastery.findOne({ puuid, region: region.toLowerCase() });
+            if (cached && cached.champions?.length > 0) {
+                console.log(`[DB] mastery for ${puuid} (${region})`);
+                return res.json(cached.champions);
+            }
+        }
+
+        // Cache miss or stale – call Riot API
+        console.log(`[API] fetching mastery for ${puuid} (${region})`);
         const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}?api_key=${getApiKey()}`;
         const masteryRes = await riotFetch(url);
         if (!masteryRes.ok) throw new Error(`Riot API error (mastery): ${masteryRes.status}`);

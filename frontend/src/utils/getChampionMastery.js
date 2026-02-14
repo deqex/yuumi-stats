@@ -1,8 +1,9 @@
 const API_BASE = '/api/mastery';
 
-export async function getChampionMastery(summonerName, summonerTag, region) {
+export async function getChampionMastery(summonerName, summonerTag, region, forceUpdate = false) {
     try {
         const params = new URLSearchParams({ summonerName, summonerTag, region });
+        if (forceUpdate) params.set('forceUpdate', 'true');
         const res = await fetch(`${API_BASE}/champion-mastery?${params}`);
         if (!res.ok) throw new Error('Failed to fetch champion mastery');
         const champs = await res.json();

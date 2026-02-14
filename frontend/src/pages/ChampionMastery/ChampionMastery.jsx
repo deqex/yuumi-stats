@@ -41,16 +41,17 @@ export default function ChampionMastery() {
   const [champions, setChampions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   const hasFetched = useRef(false);
   const params = useParams();
   const navigate = useNavigate();
 
-  const fetchMastery = async (name, tag, reg) => {
+  const fetchMastery = async (name, tag, reg, forceUpdate = false) => {
     if (!name || !tag) return;
     setLoading(true);
     setError('');
     try {
-      const data = await getChampionMastery(name, tag, reg);
+      const data = await getChampionMastery(name, tag, reg, forceUpdate);
       if (!data || data.length === 0) {
         setError('No mastery data found.');
       }
@@ -77,6 +78,18 @@ export default function ChampionMastery() {
       fetchMastery(nameFromUrl, tagFromUrl, params.region);
     }
   }, [params]);
+
+  const handleUpdate = async () => {
+    if (isUpdating || !summonerName || !summonerTag) return;
+    setIsUpdating(true);
+    try {
+      await fetchMastery(summonerName, summonerTag, region, true);
+    } catch (err) {
+      console.error('Update failed:', err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // Summary stats
   const totalPoints = champions.reduce((s, c) => s + (c.championPoints || 0), 0);
@@ -127,7 +140,17 @@ export default function ChampionMastery() {
             {/* Header */}
             <div className="mastery-header">
               <div className="mastery-title">Champion Mastery</div>
-              <div className="mastery-summoner">{summonerName}#{summonerTag}</div>
+              <div className="mastery-summoner">
+                {summonerName}#{summonerTag}
+                <button
+                  className={`update-button${isUpdating ? ' updating' : ''}`}
+                  onClick={handleUpdate}
+                  disabled={isUpdating}
+                  style={{ marginLeft: '12px' }}
+                >
+                  {isUpdating ? 'Updating...' : 'Update'}
+                </button>
+              </div>
             </div>
 
             {/* Summary cards */}
