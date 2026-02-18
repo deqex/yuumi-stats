@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getRankColor } from '../../utils/getRankColor';
 import { useParams, useNavigate } from 'react-router-dom';
 import './LiveGame.css';
 import { Navbar } from '../../components';
@@ -180,7 +181,12 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
             </div>
             <div className="lg-card-rank-row">
               {rankIcon && <img src={rankIcon} alt="rank" className="lg-rank-icon" />}
-              <span className="lg-card-rank">{rankText ?? '—'}</span>
+              <span
+                className="lg-card-rank"
+                style={{ color: getRankColor(rankText?.split(' ')[0]) }}
+              >
+                {rankText ?? '—'}
+              </span>
             </div>
           </>
         )}
@@ -381,7 +387,12 @@ export default function LiveGame() {
                 <span className="lg-team-label lg-blue">Blue Team</span>
                 <span className="lg-avg-divider"> | </span>
                 <span className="lg-avg-label">Average rank: </span>
-                <span className="lg-avg-rank">{blueAvgRank ?? '—'}</span>
+                <span
+                  className="lg-avg-rank"
+                  style={{ color: getRankColor(blueAvgRank?.split(' ')[0]) }}
+                >
+                  {blueAvgRank ?? '—'}
+                </span>
               </div>
               <div className="lg-cards-row">
                 {blueTeam.map(p => (
@@ -396,7 +407,12 @@ export default function LiveGame() {
                 <span className="lg-team-label lg-red">Red Team</span>
                 <span className="lg-avg-divider"> | </span>
                 <span className="lg-avg-label">Average rank: </span>
-                <span className="lg-avg-rank">{redAvgRank ?? '—'}</span>
+                <span
+                  className="lg-avg-rank"
+                  style={{ color: getRankColor(redAvgRank?.split(' ')[0]) }}
+                >
+                  {redAvgRank ?? '—'}
+                </span>
               </div>
               <div className="lg-cards-row">
                 {redTeam.map(p => (
