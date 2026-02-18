@@ -608,8 +608,11 @@ export default function MatchHistory() {
             <button className="profile-tab-button disabled">
               Analysis
             </button>
-            <button className="profile-tab-button disabled">
-              Live game
+            <button
+              className="profile-tab-button"
+              onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/livegame`)}
+            >
+              Live Game
             </button>
           </div>
         )}

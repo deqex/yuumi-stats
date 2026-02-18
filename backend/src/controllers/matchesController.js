@@ -82,6 +82,7 @@ async function saveMatchToDb(matchData, region) {
             totalMinionsKilled: p.totalMinionsKilled ?? 0,
             neutralMinionsKilled: p.neutralMinionsKilled ?? 0,
             champExperience: p.champExperience ?? 0,
+            champLevel: p.champLevel ?? 1,
             goldEarned: p.goldEarned ?? 0,
             totalDamageDealtToChampions: p.totalDamageDealtToChampions ?? 0,
             totalDamageShieldedOnTeammates: p.totalDamageShieldedOnTeammates ?? 0,
@@ -213,10 +214,20 @@ export async function getMatchData(req, res) {
             if (cached) {
                 console.log(`[DB] match ${matchId}`);
                 const { participantSummaries, matchId: id, region: _r, _id, __v, ...gameFields } = cached;
+                // Convert gameCreation to timestamp if it's a Date
+                let gameCreation = gameFields.gameCreation;
+                if (gameCreation instanceof Date) {
+                    gameCreation = gameCreation.getTime();
+                } else if (typeof gameCreation === 'string' || typeof gameCreation === 'object') {
+                    // Try to convert string/object to timestamp
+                    const dateObj = new Date(gameCreation);
+                    if (!isNaN(dateObj)) gameCreation = dateObj.getTime();
+                }
                 return res.json({
                     metadata: { matchId: id },
                     info: {
                         ...gameFields,
+                        gameCreation,
                         participants: participantSummaries
                     }
                 });
@@ -251,6 +262,125 @@ export async function getPuuid(req, res) {
         return res.json({ puuid });
     } catch (error) {
         console.error("getPuuid error:", error);
+        const status = error.statusCode || 500;
+        return res.status(status).json({ error: error.message });
+    }
+}
+
+export async function getParticipantStats(req, res) {
+    try {
+        const { puuid, region } = req.query;
+        if (!puuid || !region) {
+            return res.status(400).json({ error: "puuid and region are required" });
+        }
+
+        const broadRegion = getBroadRegion(region);
+        const apiKey = getApiKey();
+        const regionLower = region.toLowerCase();
+
+        // Fetch rank, summoner level, and match IDs in parallel
+        const [rankRes, summonerRes, matchIdsRes] = await Promise.all([
+            riotFetch(`https://${regionLower}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`),
+            riotFetch(`https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`),
+            riotFetch(`https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&start=0&count=7&api_key=${apiKey}`),
+        ]);
+
+        const ranks     = rankRes.ok     ? await rankRes.json()     : [];
+        const summoner  = summonerRes.ok ? await summonerRes.json() : {};
+        const matchIds  = matchIdsRes.ok ? await matchIdsRes.json() : [];
+
+        // Calculate stats from last 7 ranked games
+        let totalKills = 0, totalDeaths = 0, totalAssists = 0;
+        let totalCS = 0, totalDurationSecs = 0, totalKP = 0;
+        let wins = 0, validGames = 0;
+        const recentGames = [];
+
+        for (const matchId of matchIds) {
+            let participants = null;
+            let gameDuration = 0;
+
+            // Check DB cache first
+            const cached = await Match.findOne({ matchId }).lean();
+            if (cached) {
+                participants = cached.participantSummaries;
+                gameDuration = cached.gameDuration;
+            } else {
+                const matchRes = await riotFetch(
+                    `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`
+                );
+                if (!matchRes.ok) continue;
+                const matchData = await matchRes.json();
+                saveMatchToDb(matchData, region);
+                participants = matchData.info?.participants || [];
+                gameDuration = matchData.info?.gameDuration || 0;
+            }
+
+            const p = participants.find(pl => pl.puuid === puuid);
+            if (!p) continue;
+
+            const teamKills = participants
+                .filter(pl => pl.teamId === p.teamId)
+                .reduce((sum, pl) => sum + (pl.kills || 0), 0);
+
+            validGames++;
+            totalKills        += p.kills   || 0;
+            totalDeaths       += p.deaths  || 0;
+            totalAssists      += p.assists || 0;
+            totalCS           += (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);
+            totalDurationSecs += gameDuration;
+            totalKP           += teamKills > 0 ? (p.kills + p.assists) / teamKills : 0;
+            if (p.win) wins++;
+
+            recentGames.push({ championId: p.championId, win: p.win });
+        }
+
+        const stats = validGames > 0 ? {
+            avgKills:    +(totalKills   / validGames).toFixed(1),
+            avgDeaths:   +(totalDeaths  / validGames).toFixed(1),
+            avgAssists:  +(totalAssists / validGames).toFixed(1),
+            kda:         totalDeaths > 0
+                ? +((totalKills + totalAssists) / totalDeaths).toFixed(2)
+                : +(totalKills + totalAssists).toFixed(2),
+            winRate:     Math.round((wins / validGames) * 100),
+            csPerMin:    totalDurationSecs > 0
+                ? +(totalCS / (totalDurationSecs / 60)).toFixed(1)
+                : 0,
+            avgKP:       Math.round((totalKP / validGames) * 100),
+            gamesPlayed: validGames,
+        } : null;
+
+        return res.json({
+            summonerLevel: summoner.summonerLevel ?? null,
+            ranks,
+            stats,
+            recentGames,
+        });
+    } catch (error) {
+        console.error("getParticipantStats error:", error);
+        const status = error.statusCode || 500;
+        return res.status(status).json({ error: error.message });
+    }
+}
+
+export async function getLiveGame(req, res) {
+    try {
+        const { summonerName, summonerTag, region } = req.query;
+        if (!summonerName || !summonerTag || !region) {
+            return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
+        }
+
+        const puuid = await getCachedPuuid(summonerName, summonerTag, region);
+        const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${puuid}?api_key=${getApiKey()}`;
+        const liveRes = await riotFetch(url);
+        if (liveRes.status === 404) {
+            return res.status(404).json({ error: "Player is not in a live game" });
+        }
+        if (!liveRes.ok) throw new Error(`Riot API error (livegame): ${liveRes.status}`);
+        const liveData = await liveRes.json();
+
+        return res.json(liveData);
+    } catch (error) {
+        console.error("getLiveGame error:", error);
         const status = error.statusCode || 500;
         return res.status(status).json({ error: error.message });
     }

@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+* { font-family: 'Lexend', sans-serif; }
+
+.livegame-container {
+  min-height: 100vh;
+  width: 100vw;
+  background: #f7f5fa;
+}
+.livegame-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #E5E7EB;
+}
+.profile-tab-button {
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s;
+}
+.profile-tab-button:hover          { color: #111827; }
+.profile-tab-button.active         { color: #A78BFA; border-bottom-color: #A78BFA; }
+.profile-tab-button.disabled       { color: #D1D5DB; cursor: default; }
+.profile-tab-button.disabled:hover { color: #D1D5DB; }
+
+.lg-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 20px;
+  color: #6B7280;
+  font-size: 15px;
+  font-weight: 500;
+}
+.lg-spinner {
+  width: 22px; height: 22px;
+  border: 3px solid #E5E7EB;
+  border-top-color: #A78BFA;
+  border-radius: 50%;
+  animation: lg-spin 0.75s linear infinite;
+}
+@keyframes lg-spin { to { transform: rotate(360deg); } }
+
+.lg-not-found {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  padding: 80px 20px;
+  background: white; border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  text-align: center;
+}
+.lg-not-found-icon  { font-size: 44px; opacity: .35; }
+.lg-not-found-title { font-size: 18px; font-weight: 700; color: #111827; }
+.lg-not-found-sub   { font-size: 13px; color: #9CA3AF; }
+
+.lg-game-info {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; color: #374151; font-weight: 500;
+}
+.lg-info-sep { color: #9CA3AF; margin: 0 2px; }
+
+.lg-team-section {
+  background: #dddde8;
+  border-radius: 10px;
+  padding: 0 14px 14px;
+}
+.lg-team-header {
+  display: flex; align-items: center; gap: 4px;
+  padding: 12px 4px 10px;
+  font-size: 14px; font-weight: 600;
+}
+.lg-team-label { font-weight: 700; }
+.lg-blue { color: #4a78e8; }
+.lg-red  { color: #e84a4a; }
+.lg-avg-divider { color: #9CA3AF; }
+.lg-avg-label   { color: #374151; font-weight: 400; }
+.lg-avg-rank    { color: #06b6d4; font-weight: 700; }
+
+.lg-cards-row {
+  display: flex;
+  gap: 9px;
+}
+
+.lg-player-card {
+  flex: 1; min-width: 0;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  transition: box-shadow 0.15s;
+}
+.lg-player-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.15); }
+.lg-player-card--focused {
+  outline: 2px solid #A78BFA;
+  outline-offset: -2px;
+}
+
+.lg-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 9px 10px;
+  background: #eeeef5;
+  border-bottom: 1px solid #e0e0ec;
+}
+
+.lg-spells-col,
+.lg-runes-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.lg-spell-slot {
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  background: #d0d0dc;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.lg-champ-tile {
+  width: 54px; height: 54px;
+  border-radius: 6px;
+  background: #c8c8d4;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.lg-champ-tile-empty {
+  width: 100%; height: 100%;
+  background: #c8c8d4;
+}
+
+.lg-rune-slot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #d0d0dc;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.lg-rune-slot--sub {
+  width: 20px; height: 20px;
+  align-self: center;
+}
+
+.lg-slot-img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.lg-slot-img--sub {
+  width: 80%; height: 80%;
+  object-fit: contain;
+}
+
+.lg-card-info {
+  padding: 7px 9px 5px;
+  text-align: center;
+}
+.lg-card-name {
+  font-size: 12px; font-weight: 700; color: #111827;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lg-card-tag   { font-weight: 400; color: #6B7280; font-size: 11px; }
+.lg-card-level { font-size: 10px; color: #9CA3AF; margin-top: 1px; }
+.lg-card-rank  { font-size: 12px; font-weight: 700; color: #06b6d4; margin-top: 1px; }
+
+.lg-recent-champs {
+  display: flex;
+  gap: 3px;
+  padding: 5px 9px;
+  justify-content: center;
+}
+.lg-recent-champ {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  max-width: 24px;
+}
+.lg-recent-champ-icon {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #d8d8e4;
+  flex-shrink: 0;
+}
+.lg-team-champ-empty {
+  width: 100%; height: 100%;
+  background: #d8d8e4;
+}
+.lg-recent-champ-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #d8d8e4;
+  flex-shrink: 0;
+}
+.lg-recent-champ-bar.lg-bar-win  { background: #4ade80; }
+.lg-recent-champ-bar.lg-bar-loss { background: #f87171; }
+
+.lg-skeleton {
+  background: linear-gradient(90deg, #e0e0ec 25%, #ececf8 50%, #e0e0ec 75%);
+  background-size: 200% 100%;
+  animation: lg-shimmer 1.2s infinite;
+}
+
+.lg-card-rank-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+.lg-rank-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.lg-card-loading-row {
+  height: 25px;
+  background: linear-gradient(90deg, #e8e8f0 25%, #f0f0f8 50%, #e8e8f0 75%);
+  background-size: 200% 100%;
+  animation: lg-shimmer 1.2s infinite;
+  border-radius: 4px;
+  margin-top: 3px;
+}
+
+.lg-card-stats {
+  padding: 0 9px 7px;
+  text-align: center;
+}
+.lg-stat-main { font-size: 11px; color: #374151; line-height: 1.6; }
+.lg-stat-sub  { font-size: 10px; color: #6B7280;  line-height: 1.5; }
+
+.lg-stat-skeleton {
+  height: 9px;
+  background: linear-gradient(90deg, #e8e8f0 25%, #f0f0f8 50%, #e8e8f0 75%);
+  background-size: 200% 100%;
+  animation: lg-shimmer 1.2s infinite;
+  border-radius: 4px;
+  margin: 3px auto;
+}
+
+@keyframes lg-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.lg-card-badges {
+  padding: 0 7px 8px;
+  display: flex; gap: 4px; flex-wrap: wrap;
+  justify-content: center;
+  min-height: 8px;
+}
