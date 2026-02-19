@@ -167,28 +167,19 @@ async function fetchPuuid(summonerName, summonerTag, region) {
 
 export async function getMatchIds(req, res) {
     try {
-        const { summonerName, summonerTag, region, forceUpdate } = req.query;
+        const { summonerName, summonerTag, region, forceUpdate, start = '0', count = '5' } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
+        const startNum = Math.max(0, parseInt(start, 10) || 0);
+        const countNum = Math.min(100, Math.max(1, parseInt(count, 10) || 5));
+
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
 
-        if (forceUpdate !== 'true') {
-            const cachedMatches = await Match.find({ "participantSummaries.puuid": puuid })
-                .sort({ gameCreation: -1 })
-                .limit(5)
-                .select('matchId');
-            if (cachedMatches.length > 0) {
-                const matchIds = cachedMatches.map(m => m.matchId);
-                console.log(`[DB] match IDs for ${summonerName}#${summonerTag} (${matchIds.length} matches)`);
-                return res.json(matchIds);
-            }
-        }
-
         const broadRegion = getBroadRegion(region);
-        console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region})`);
-        const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5&api_key=${getApiKey()}`;
+        console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region}, start=${startNum}, count=${countNum})`);
+        const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${startNum}&count=${countNum}&api_key=${getApiKey()}`;
         const matchRes = await riotFetch(url);
         if (!matchRes.ok) throw new Error(`Riot API error (matchIds): ${matchRes.status}`);
         const matchIds = await matchRes.json();

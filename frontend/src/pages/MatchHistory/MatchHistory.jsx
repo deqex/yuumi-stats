@@ -69,16 +69,20 @@ export default function MatchHistory() {
   const [rankEntries, setRankEntries] = useState([]);
   const [expandedMatchId, setExpandedMatchId] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [matchOffset, setMatchOffset] = useState(5);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [queuesMap, setQueuesMap] = useState({});
   const params = useParams();
   const navigate = useNavigate();
 
   const fetchMatches = async (name, tag, regionCode, forceUpdate = false) => {
     if (!name || !tag) return;
     try {
-      const matchIds = await getMatchIds(name, tag, regionCode, forceUpdate);
+      const matchIds = await getMatchIds(name, tag, regionCode, forceUpdate, 0, 5);
       // Process sequentially to avoid hitting Riot API rate limits
       const matchData = [];
-      for (const matchId of matchIds.slice(0, 5)) {
+      for (const matchId of matchIds) {
         try {
           const data = await getDataFromMatchId(matchId, regionCode, forceUpdate);
           if (!data || !data.info) continue; // skip failed fetches
@@ -92,10 +96,66 @@ export default function MatchHistory() {
         }
       }
       setMatches(matchData);
+      setMatchOffset(5);
+      setHasMore(true);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
     }
   };
+
+  const loadMoreMatches = async () => {
+    if (isLoadingMore || !hasMore || !summonerName || !summonerTag) return;
+    setIsLoadingMore(true);
+    try {
+      const currentOffset = matchOffset;
+      const newMatchIds = await getMatchIds(summonerName, summonerTag, region, false, currentOffset, 20);
+      if (newMatchIds.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      const existingIds = new Set(matches.map(m => m.matchId));
+      const newMatchData = [];
+      for (const matchId of newMatchIds) {
+        if (existingIds.has(matchId)) continue;
+        try {
+          const data = await getDataFromMatchId(matchId, region, false);
+          if (!data || !data.info) continue;
+          const players = dissectMatchData(data);
+          const gameInfo = dissectGeneralMatchData(data);
+          const scoredPlayers = await genScore(players, gameInfo);
+          const playersWithBadges = await genBadges(scoredPlayers, gameInfo);
+          newMatchData.push({ matchId, players: playersWithBadges, gameInfo });
+        } catch (e) {
+          console.warn(`Skipping match ${matchId}:`, e);
+        }
+      }
+      setMatches(prev => [...prev, ...newMatchData]);
+      const newOffset = currentOffset + newMatchIds.length;
+      setMatchOffset(newOffset);
+      if (newOffset >= 100 || newMatchIds.length < 20) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Failed to load more matches:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch('/api/matches/queues')
+      .then(r => r.json())
+      .then(data => {
+        const map = {};
+        for (const q of data) {
+          let name = q.description || q.map || 'Unknown';
+          name = name.replace(/^\d+v\d+\s+/, '').replace(/\s+games$/i, '');
+          map[q.queueId] = name;
+        }
+        setQueuesMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (params.region && params.nameTag) {
@@ -139,6 +199,73 @@ export default function MatchHistory() {
   }).length;
 
   const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
+
+  const profileStats = (() => {
+    let totalKills = 0, totalDeaths = 0, totalAssists = 0;
+    let totalOpScore = 0, opScoreCount = 0;
+    let totalCS = 0, totalDurationMinutes = 0, csGameCount = 0;
+
+    for (const m of matches) {
+      const players = Object.values(m.players);
+      const fp = players.find(p => (p?.name || '').toLowerCase() === summonerName.toLowerCase());
+      if (!fp) continue;
+
+      totalKills   += fp.kills   || 0;
+      totalDeaths  += fp.deaths  || 0;
+      totalAssists += fp.assists || 0;
+
+      if (typeof fp.opScore === 'number') {
+        totalOpScore += fp.opScore;
+        opScoreCount++;
+      }
+
+      const isSupport = (fp.teamPosition || fp.individualPosition || '').toUpperCase() === 'UTILITY';
+      if (!isSupport) {
+        const cs = (fp.totalMinionsKilled || 0) + (fp.neutralMinionsKilled || 0);
+        const durationSecs = fp.timePlayed || m.gameInfo?.gameDuration || 0;
+        if (durationSecs > 0) {
+          totalCS += cs;
+          totalDurationMinutes += durationSecs / 60;
+          csGameCount++;
+        }
+      }
+    }
+
+    const n = matches.length;
+    return {
+      avgKills:    n > 0 ? (totalKills   / n).toFixed(1) : '—',
+      avgDeaths:   n > 0 ? (totalDeaths  / n).toFixed(1) : '—',
+      avgAssists:  n > 0 ? (totalAssists / n).toFixed(1) : '—',
+      avgOpScore:  opScoreCount > 0 ? Math.round(totalOpScore / opScoreCount) : null,
+      avgCsPerMin: csGameCount  > 0 ? (totalCS / totalDurationMinutes).toFixed(1) : null,
+    };
+  })();
+
+  const mostPlayedChampions = (() => {
+    const champMap = {};
+    const filtered = matches.filter(m => {
+      const qid = m.gameInfo?.queueId;
+      if (activeTab === 'ranked') return qid === 420;
+      if (activeTab === 'flex')   return qid === 440;
+      if (activeTab === 'aram')   return qid === 450;
+      return true;
+    });
+    for (const m of filtered) {
+      const players = Object.values(m.players);
+      const fp = players.find(p => (p?.name || '').toLowerCase() === summonerName.toLowerCase());
+      if (!fp?.championName) continue;
+      const key = fp.championName;
+      if (!champMap[key]) champMap[key] = { championName: key, games: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
+      champMap[key].games++;
+      if (fp.win) champMap[key].wins++;
+      champMap[key].kills   += fp.kills   || 0;
+      champMap[key].deaths  += fp.deaths  || 0;
+      champMap[key].assists += fp.assists || 0;
+    }
+    return Object.values(champMap)
+      .sort((a, b) => b.games - a.games)
+      .slice(0, 5);
+  })();
 
   const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
   const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
@@ -379,9 +506,7 @@ export default function MatchHistory() {
       return `${diffMonth}mo ago`;
     })();
 
-    // Queue type label
-    const QUEUE_NAMES = { 420: 'Ranked Solo', 440: 'Ranked Flex', 450: 'ARAM', 400: 'Normal Draft', 430: 'Normal Blind' };
-    const queueName = QUEUE_NAMES[match.gameInfo?.queueId] || 'Normal';
+    const queueName = queuesMap[match.gameInfo?.queueId] || 'Normal';
 
     const isExpanded = expandedMatchId === match.matchId;
 
@@ -689,17 +814,23 @@ export default function MatchHistory() {
               </div>
               <div className="performance-details">
                 <div className="performance-row">
-                  <div className="performance-label">20 Games</div>
+                  <div className="performance-label">{matches.length} Games</div>
                   <div className="performance-value">{wins}W {matches.length - wins}L</div>
                 </div>
                 <div className="performance-row">
                   <div className="performance-label">Avg KDA</div>
-                  <div className="performance-value">6.8 / 3.1 / 8.1</div>
+                  <div className="performance-value">{profileStats.avgKills} / {profileStats.avgDeaths} / {profileStats.avgAssists}</div>
                 </div>
                 <div className="performance-row">
-                  <div className="performance-label">Avg Al Score</div>
-                  <div className="performance-value" style={{ color: '#A78BFA' }}>68%</div>
+                  <div className="performance-label">Avg AI Score</div>
+                  <div className="performance-value" style={{ color: '#A78BFA' }}>{profileStats.avgOpScore ?? '—'}</div>
                 </div>
+                {profileStats.avgCsPerMin !== null && (
+                  <div className="performance-row">
+                    <div className="performance-label">Avg CS/min</div>
+                    <div className="performance-value">{profileStats.avgCsPerMin}</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -712,20 +843,28 @@ export default function MatchHistory() {
             <div className="champions-sidebar">
               <div className="champions-title">Most Played</div>
               <div className="champions-list">
-                <div className="champion-item">
-                  <div className="champion-icon">🎮</div>
-                  <div className="champion-info">
-                    <div className="champion-name">Champion 1</div>
-                    <div className="champion-stats">53% · 12 games</div>
-                  </div>
-                </div>
-                <div className="champion-item">
-                  <div className="champion-icon">🎮</div>
-                  <div className="champion-info">
-                    <div className="champion-name">Champion 2</div>
-                    <div className="champion-stats">67% · 8 games</div>
-                  </div>
-                </div>
+                {mostPlayedChampions.map(({ championName, games, wins, kills, deaths, assists }) => {
+                  const winPct = Math.round((wins / games) * 100);
+                  const iconUrl = getChampionIconUrl(championName);
+                  const avgK = (kills   / games).toFixed(1);
+                  const avgD = (deaths  / games).toFixed(1);
+                  const avgA = (assists / games).toFixed(1);
+                  return (
+                    <div className="champion-item" key={championName}>
+                      <div className="champion-icon">
+                        {iconUrl
+                          ? <img src={iconUrl} alt={championName} className="champion-icon-img" />
+                          : <span>{championName[0]}</span>
+                        }
+                      </div>
+                      <div className="champion-info">
+                        <div className="champion-name">{championName}</div>
+                        <div className="champion-stats">{winPct}% · {games} game{games !== 1 ? 's' : ''}</div>
+                        <div className="champion-kda">{avgK} / {avgD} / {avgA}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -760,10 +899,28 @@ export default function MatchHistory() {
 
               {/* Match Cards */}
               <div className="matches-list">
-                {matches.map(match => (
-                  <SimplifiedMatchCard key={match.matchId} match={match} />
-                ))}
+                {matches
+                  .filter(match => {
+                    const qid = match.gameInfo?.queueId;
+                    if (activeTab === 'ranked') return qid === 420;
+                    if (activeTab === 'flex')   return qid === 440;
+                    if (activeTab === 'aram')   return qid === 450;
+                    return true;
+                  })
+                  .map(match => (
+                    <SimplifiedMatchCard key={match.matchId} match={match} />
+                  ))}
               </div>
+
+              {hasMore && (
+                <button
+                  className={`load-more-button${isLoadingMore ? ' loading' : ''}`}
+                  onClick={loadMoreMatches}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? 'Loading...' : 'Load More Matches'}
+                </button>
+              )}
             </div>
           </div>
         )}

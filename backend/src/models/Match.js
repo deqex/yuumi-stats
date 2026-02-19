@@ -52,6 +52,7 @@ const matchSchema = new mongoose.Schema({
     totalMinionsKilled: { type: Number, default: 0 },
     neutralMinionsKilled: { type: Number, default: 0 },
     champExperience: { type: Number, default: 0 },
+    champLevel: { type: Number, default: 1 },
     goldEarned: { type: Number, default: 0 },
     totalDamageDealtToChampions: { type: Number, default: 0 },
     totalDamageShieldedOnTeammates: { type: Number, default: 0 },

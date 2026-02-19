@@ -26,8 +26,7 @@ const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERS
 const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/spell`;
 const DD_RUNE_ICON_BASE     = `https://ddragon.leagueoflegends.com/cdn/img`;
 
-const QUEUE_NAMES = { 420: 'Ranked Solo/Duo', 440: 'Ranked Flex', 450: 'ARAM', 400: 'Normal Draft', 430: 'Normal Blind' };
-const MAP_NAMES   = { 11: "Summoner's Rift", 12: 'Howling Abyss' };
+const MAP_NAMES = { 11: "Summoner's Rift", 12: 'Howling Abyss' };
 
 const RANK_ICON_MAP = {
   IRON: RankIron, BRONZE: RankBronze, SILVER: RankSilver,
@@ -263,6 +262,7 @@ export default function LiveGame() {
   const [summonerName, setSummonerName] = useState('');
   const [summonerTag, setSummonerTag]   = useState('');
   const [region, setRegion]             = useState('');
+  const [queuesMap, setQueuesMap]       = useState({});
   const params   = useParams();
   const navigate = useNavigate();
 
@@ -274,6 +274,21 @@ export default function LiveGame() {
       setSummonerTag(tag || '');
     }
   }, [params]);
+
+  useEffect(() => {
+    fetch('/api/matches/queues')
+      .then(r => r.json())
+      .then(data => {
+        const map = {};
+        for (const q of data) {
+          let name = q.description || q.map || 'Unknown';
+          name = name.replace(/^\d+v\d+\s+/, '').replace(/\s+games$/i, '');
+          map[q.queueId] = name;
+        }
+        setQueuesMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/data/en_US/champion.json`)
@@ -338,7 +353,7 @@ export default function LiveGame() {
   const blueAvgRank = calcAvgRank(blueTeam.map(p => p.puuid), statsMap);
   const redAvgRank  = calcAvgRank(redTeam.map(p => p.puuid), statsMap);
 
-  const queueName = QUEUE_NAMES[gameData?.gameQueueConfigId] || gameData?.gameMode || '';
+  const queueName = queuesMap[gameData?.gameQueueConfigId] || gameData?.gameMode || '';
   const mapName   = MAP_NAMES[gameData?.mapId] || '';
 
   return (

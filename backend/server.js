@@ -18,8 +18,8 @@ app.use("/api/mastery", masteryRoutes);
 app.use("/api/profile", profileRoutes);
 
 
-//dns.setServers(["1.1.1.1"]);
-//console.log(await dns.getServers());
+dns.setServers(["1.1.1.1"]);
+console.log(await dns.getServers());
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });

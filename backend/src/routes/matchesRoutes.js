@@ -1,4 +1,5 @@
 import express from "express";
+import { createRequire } from "module";
 import {
     getMatchIds,
     getMatchData,
@@ -9,8 +10,12 @@ import {
     getParticipantStats,
 } from "../controllers/matchesController.js";
 
+const require = createRequire(import.meta.url);
+const queuesData = require("../utils/queues.json");
+
 const router = express.Router();
 
+router.get("/queues", (req, res) => res.json(queuesData));
 router.get("/puuid", getPuuid);
 router.get("/summoner", getSummoner);
 router.get("/ranks", getRankEntries);
