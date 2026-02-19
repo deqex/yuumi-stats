@@ -232,10 +232,14 @@ export default function MatchHistory() {
     }
 
     const n = matches.length;
+    const avgKdaRatio = n > 0
+      ? (totalDeaths > 0 ? ((totalKills + totalAssists) / totalDeaths).toFixed(2) : 'Perfect')
+      : '—';
     return {
       avgKills:    n > 0 ? (totalKills   / n).toFixed(1) : '—',
       avgDeaths:   n > 0 ? (totalDeaths  / n).toFixed(1) : '—',
       avgAssists:  n > 0 ? (totalAssists / n).toFixed(1) : '—',
+      avgKdaRatio,
       avgOpScore:  opScoreCount > 0 ? Math.round(totalOpScore / opScoreCount) : null,
       avgCsPerMin: csGameCount  > 0 ? (totalCS / totalDurationMinutes).toFixed(1) : null,
     };
@@ -275,10 +279,8 @@ export default function MatchHistory() {
 
   const profileIconId = summonerData?.profileIconId ?? 588;
   const soloRank = rankEntries.find(entry => entry.queueType === 'RANKED_SOLO_5x5');
-  const flexRank = rankEntries.find(entry => entry.queueType === 'RANKED_FLEX_SR');
   const rankSections = [
     { label: 'Ranked Solo/Duo', entry: soloRank },
-    { label: 'Ranked Flex', entry: flexRank },
   ];
 
   const getRankIcon = (entry) => {
@@ -819,7 +821,7 @@ export default function MatchHistory() {
                 </div>
                 <div className="performance-row">
                   <div className="performance-label">Avg KDA</div>
-                  <div className="performance-value">{profileStats.avgKills} / {profileStats.avgDeaths} / {profileStats.avgAssists}</div>
+                  <div className="performance-value">{profileStats.avgKdaRatio} KDA</div>
                 </div>
                 <div className="performance-row">
                   <div className="performance-label">Avg AI Score</div>

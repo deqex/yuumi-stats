@@ -7,10 +7,8 @@
   border: 1px solid #1e2a3a;
   border-top: none;
   margin-top: -2px;
-  width: 900px;
-  /* Extra breathing room at the far right edge */
+  width: 100%;
   animation: detailSlideDown 0.25s ease-out;
-
 }
 
 @keyframes detailSlideDown {
@@ -76,7 +74,7 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
-  flex: 0 0 230px;
+  flex: 0 0 180px;
   min-width: 0;
 }
 
@@ -149,10 +147,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  /* Keep this column compact so it doesn't push
-     AI-score / items off the right side. */
-  flex: 0 0 230px;
-  max-width: 230px;
+  flex: 0 0 180px;
+  max-width: 180px;
   min-width: 0;
 }
 
@@ -250,7 +246,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 80px;
 }
 
 .md-name-focus {
@@ -421,8 +417,8 @@
 }
 
 .md-item-slot {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -452,16 +448,90 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 1060px) {
-  .match-detail-panel {
-    width: 100%;
+
+/* Hide Score + CS early */
+@media (max-width: 1400px) {
+  .md-score-cell,
+  .md-header-col-score,
+  .md-cs-cell,
+  .md-header-col-cs {
+    display: none;
+  }
+}
+
+/* Hide KP */
+@media (max-width: 1100px) {
+  .md-kp-cell,
+  .md-header-col-kp {
+    display: none;
+  }
+}
+
+/* Sidebar visible down to 901px. Shrink champion to icon only well before that. */
+@media (max-width: 950px) {
+  .md-spells-runes,
+  .md-player-info {
+    display: none;
   }
 
-  .md-player-name {
-    max-width: 100px;
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 40px;
+    max-width: 40px;
+  }
+}
+
+/* Hide champion column and damage */
+@media (max-width: 700px) {
+  .md-champion-cell,
+  .md-team-title {
+    display: none;
   }
 
-  .md-items-cell {
-    width: 150px;
+  .md-damage-cell,
+  .md-header-col-dmg {
+    display: none;
+  }
+
+  .md-item-trinket {
+    display: none;
+  }
+}
+
+/* Compact items */
+@media (max-width: 500px) {
+  .md-kda-cell,
+  .md-header-col-kda {
+    width: 80px;
+  }
+
+  .md-item-slot {
+    width: 20px;
+    height: 20px;
+  }
+
+  .md-item-quest {
+    display: none;
+  }
+
+  .md-player-row {
+    padding: 6px 10px;
+  }
+
+  .md-team-header {
+    padding: 8px 10px;
+  }
+}
+
+/* Tightest phones */
+@media (max-width: 380px) {
+  .md-kda-cell,
+  .md-header-col-kda {
+    width: 70px;
+  }
+
+  .md-item-slot {
+    width: 16px;
+    height: 16px;
   }
 }

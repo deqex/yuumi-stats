@@ -2,6 +2,7 @@
 
 * {
   font-family: 'Lexend', sans-serif;
+  box-sizing: border-box;
 }
 
 body {
@@ -13,6 +14,7 @@ body {
   min-height: 100vh;
   width: 100vw;
   background: #f7f5fa;
+  overflow-x: hidden;
 }
 
 .match-history-inner {
@@ -28,6 +30,7 @@ body {
 /* Profile Tabs (Overview / Mastery / etc.) */
 .profile-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   margin: 0 0 4px 2px;
   padding-bottom: 12px;
@@ -444,7 +447,7 @@ body {
   background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
   border: 1px solid #2d2d44;
   min-height: 70px;
-  width: 880px
+  width: 100%;
 }
 
 .match-card.win {
@@ -564,6 +567,7 @@ body {
   gap: 4px;
   justify-content: center;
   flex: 1; /* allow stats to center in remaining space */
+  min-width: 0;
 }
 
 .match-items-stats-row {
@@ -577,8 +581,9 @@ body {
   align-items: center;
   gap: 16px;
   justify-content: space-between;
-  width: 230px; /* fixed width so AI score lines up across cards */
-  margin: 0 auto; /* center KDA, CS and AI score between items and player list */
+  width: auto;
+  flex: 1;
+  margin: 0;
 }
 
 /* Summoner Spells */
@@ -783,7 +788,7 @@ body {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  width: 105px; /* slightly larger player list */
+  width: 130px;
 }
 
 .player-item {
@@ -866,7 +871,7 @@ body {
 .load-more-button {
   display: block;
   width: 100%;
-  max-width: 880px;
+  max-width: 100%;
   padding: 12px 0;
   border: 1px solid #2d2d44;
   border-radius: 7px;
@@ -937,4 +942,359 @@ body {
   border-radius: 0 14px 14px 0;
   border: none;
   cursor: pointer;
+}
+
+/* ===================== RESPONSIVE ===================== */
+
+/* Players section needs ~230px — only show it at wide screens where champion-col has room */
+@media (max-width: 1100px) {
+  .match-players-section {
+    display: none;
+  }
+}
+
+/* ≤ 900px: stack sidebar, wrap profile card */
+@media (max-width: 900px) {
+
+  .matches-section {
+    flex-direction: column;
+  }
+
+  .champions-sidebar {
+    width: 100%;
+  }
+
+  .champions-list {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px;
+    padding-bottom: 6px;
+  }
+
+  .champion-item {
+    min-width: 130px;
+    flex-shrink: 0;
+  }
+
+  /* Profile card: icon + info on first row, stats full-width below */
+  .player-profile-card {
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .player-icon-section {
+    flex: 0 0 auto;
+  }
+
+  .player-info {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .performance-stats {
+    flex: 0 0 100%;
+  }
+}
+
+/* ≤ 768px: hide stat circle, shrink fonts, stack match card items */
+@media (max-width: 768px) {
+  .stat-circle {
+    display: none;
+  }
+
+  .player-title {
+    font-size: 22px;
+  }
+
+  .performance-value {
+    font-size: 16px;
+  }
+
+  .performance-details {
+    width: 100%;
+  }
+
+  .match-items-stats-row {
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+  }
+}
+
+/* ≤ 560px: compact match card, drop runes, fully stack profile card */
+@media (max-width: 560px) {
+  .match-history-inner {
+    padding: 16px 10px;
+    gap: 16px;
+  }
+
+  .match-runes-stack {
+    display: none;
+  }
+
+  .match-card {
+    padding: 8px;
+    gap: 8px;
+    min-height: unset;
+  }
+
+  .match-left-section {
+    padding-left: 4px;
+  }
+
+  .match-stats-row {
+    gap: 12px;
+  }
+
+  .kda-value,
+  .cs-value {
+    font-size: 14px;
+  }
+
+  .kda-ratio,
+  .cs-per-min {
+    font-size: 11px;
+  }
+
+  .player-profile-card {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .player-info {
+    min-width: 0;
+  }
+
+  .performance-stats {
+    flex: unset;
+    width: 100%;
+  }
+
+  .player-title {
+    font-size: 20px;
+  }
+
+  .performance-value {
+    font-size: 15px;
+  }
+
+  .profile-tabs {
+    gap: 12px;
+  }
+
+  .tab-button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
+
+/* ≤ 420px: hide summoners, shrink everything noticeably */
+@media (max-width: 420px) {
+  .match-history-inner {
+    padding: 10px 6px;
+    gap: 10px;
+  }
+
+  .match-summoners-section {
+    display: none;
+  }
+
+  .match-card {
+    gap: 5px;
+    padding: 6px 5px;
+  }
+
+  .match-left-section {
+    padding-left: 0;
+  }
+
+  .match-info-text {
+    min-width: 58px;
+  }
+
+  .champion-portrait {
+    width: 36px;
+    height: 36px;
+  }
+
+  .match-items-section {
+    grid-template-columns: repeat(4, 20px);
+    grid-auto-rows: 20px;
+    gap: 3px;
+  }
+
+  .item-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .match-kda-section {
+    min-width: 48px;
+  }
+
+  .match-cs-section {
+    min-width: 48px;
+  }
+
+  .match-stats-row {
+    gap: 6px;
+  }
+
+  .kda-value,
+  .cs-value {
+    font-size: 11px;
+  }
+
+  .kda-ratio,
+  .cs-per-min {
+    font-size: 9px;
+  }
+
+  .score-value {
+    font-size: 13px;
+  }
+
+  .score-label {
+    font-size: 10px;
+  }
+
+  /* Profile card */
+  .player-profile-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .player-main-icon {
+    width: 90px;
+    height: 90px;
+    font-size: 32px;
+  }
+
+  .player-title {
+    font-size: 17px;
+  }
+
+  .rank-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .rank-icon-placeholder {
+    width: 28px;
+    height: 28px;
+  }
+
+  .performance-value {
+    font-size: 13px;
+  }
+
+  .performance-label {
+    font-size: 12px;
+  }
+
+  .performance-details {
+    gap: 10px;
+  }
+}
+
+/* ≤ 360px: absolute minimum — everything super compact */
+@media (max-width: 360px) {
+  .match-history-inner {
+    padding: 8px 4px;
+    gap: 8px;
+  }
+
+  .match-card {
+    gap: 4px;
+    padding: 5px 4px;
+  }
+
+  .match-info-text {
+    min-width: 0;
+  }
+
+  .champion-portrait {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+  }
+
+  .match-items-section {
+    grid-template-columns: repeat(4, 16px);
+    grid-auto-rows: 16px;
+    gap: 2px;
+  }
+
+  .item-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .match-kda-section,
+  .match-cs-section {
+    min-width: 0;
+  }
+
+  .match-stats-row {
+    gap: 4px;
+  }
+
+  .kda-value,
+  .cs-value {
+    font-size: 10px;
+  }
+
+  .kda-ratio,
+  .cs-per-min {
+    font-size: 8px;
+  }
+
+  .score-value {
+    font-size: 11px;
+  }
+
+  .score-label {
+    font-size: 9px;
+  }
+
+  /* Profile card */
+  .player-profile-card {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .player-main-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 26px;
+  }
+
+  .player-title {
+    font-size: 15px;
+  }
+
+  .rank-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .rank-icon-placeholder {
+    width: 24px;
+    height: 24px;
+  }
+
+  .performance-value {
+    font-size: 12px;
+  }
+
+  .performance-label {
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .performance-details {
+    gap: 8px;
+  }
 }
