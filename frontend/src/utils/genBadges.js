@@ -21,17 +21,13 @@ export async function genBadges(players, gameInfo) {
         }
 
         // pentakills, quadrakills, triplekills, doublekills
-        // carry badge for highest opScore on winning team
-        // unlucky badge for highest opScore on losing team
         // stomped early / won lane
         // late bloomer
-        // stopmped - enemy less than 30 opScore
         // if jungle - controlled objectives
         // comeback
         // splitpusher
         // toxic
         // ints the jungler
-
 
 
         // highest gold
@@ -40,7 +36,7 @@ export async function genBadges(players, gameInfo) {
         }
 
         //objectives stolen
-        const objectivesStolen = p.objectivesStolen || 0;
+        const objectivesStolen = p.objectivesStolen || 0; //why did i do that
         if (objectivesStolen > 0) {
             p.badges.push("Objective Stealer");
         }
@@ -54,7 +50,28 @@ export async function genBadges(players, gameInfo) {
             p.badges.push("Unstoppable");
         }
 
+        if (p.opScore > 70 && p.win === false) {
+            p.badges.push("Unlucky")
+        }
 
+        //ew 
+        if (p.largestMultiKill === 2) {
+            p.badges.push("Doublekill")
+        } else if (p.largestMultiKill === 3) {
+            p.badges.push("Triple kill")
+        } else if (p.largestMultiKill === 4) {
+            p.badges.push("Quadra kill")
+        } else if (p.largestMultiKill === 5) {
+            p.badges.push("Pentakill")
+        }
+
+        if (p.controlWardsPlaced === 0) {
+            p.badges.push("No control wards")
+        }
+
+        if (p.hadOpenNexus > 0) {
+            p.badges.push("Close game")
+        }
 
 
         p.badgeBreakdown = {
