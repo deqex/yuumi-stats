@@ -23,7 +23,7 @@ body {
   gap: 24px;
   padding: 30px 20px;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -945,6 +945,47 @@ body {
 }
 
 /* ===================== RESPONSIVE ===================== */
+
+/* Narrow desktop tweaks: 1101px — 1280px */
+@media (min-width: 1101px) and (max-width: 1280px) {
+  /* slightly reduce sidebar and player column sizes to avoid overflow */
+  /* keep global max-width (1280px) for consistent alignment */
+
+  .champions-sidebar {
+    width: 180px;
+  }
+
+  .match-card {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .champion-portrait {
+    width: 48px;
+    height: 48px;
+  }
+
+  .match-items-section {
+    grid-template-columns: repeat(4, 22px);
+    grid-auto-rows: 22px;
+    gap: 4px;
+  }
+
+  .item-icon { width: 22px; height: 22px; }
+
+  .match-kda-section { min-width: 58px; }
+  .match-cs-section { min-width: 58px; }
+
+  .team-column { width: 110px; }
+
+  .player-name { font-size: 11px; }
+
+  .match-info-text { min-width: 80px; }
+
+  .match-stats-row { gap: 8px; }
+
+  .score-value { font-size: 14px; }
+}
 
 /* Players section needs ~230px — only show it at wide screens where champion-col has room */
 @media (max-width: 1100px) {

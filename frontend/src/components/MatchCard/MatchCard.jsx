@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 // DDragon CDN base for champion icons
 const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
@@ -88,14 +88,15 @@ export default function MatchCard({ data, focusName }) {
 
   const ChampIcon = ({ name }) => {
     const src = getChampionImgUrl(name);
+    const size = between1101and1280 ? 28 : 32;
     if (!src) {
-      return <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(255,255,255,0.08)', marginRight: 8 }} />
+      return <div style={{ width: size, height: size, borderRadius: 6, background: 'rgba(255,255,255,0.08)', marginRight: 8 }} />
     }
     return (
       <img
         src={src}
         alt={name || 'champion'}
-        style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover', marginRight: 8 }}
+        style={{ width: size, height: size, borderRadius: 6, objectFit: 'cover', marginRight: 8 }}
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
     );
@@ -122,7 +123,19 @@ export default function MatchCard({ data, focusName }) {
     );
   };
 
-  const rowGrid = '1fr 72px 120px 1fr 60px 60px 180px';
+  const [viewportW, setViewportW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1400);
+
+  useEffect(() => {
+    const onResize = () => setViewportW(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const between1101and1280 = viewportW >= 1101 && viewportW <= 1280;
+
+  const rowGrid = between1101and1280
+    ? 'minmax(0,1fr) 56px 100px minmax(0,1fr) 50px 50px 140px'
+    : 'minmax(0,1fr) 72px 120px minmax(0,1fr) 60px 60px 180px';
 
   const rowStyle = {
     display: 'grid',
@@ -156,7 +169,7 @@ export default function MatchCard({ data, focusName }) {
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          maxWidth: 220
+          maxWidth: between1101and1280 ? 140 : 220
         }}>{p?.name}</span>
         <span style={{ fontSize: 12, color: '#9CA3AF' }}>Lvl {p?.champLevel ?? 1}</span>
       </div>
