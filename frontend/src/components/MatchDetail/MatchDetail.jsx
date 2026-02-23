@@ -141,15 +141,16 @@ export default function MatchDetail({ match, focusName }) {
     const d = p.deaths ?? 0;
     if (d === 0) return 'kda-perfect';
     const ratio = ((p.kills ?? 0) + (p.assists ?? 0)) / d;
-    if (ratio >= 5) return 'kda-excellent';
-    if (ratio >= 3) return 'kda-good';
-    return '';
+    if (ratio > 5) return 'kda-gold';
+    if (ratio > 1.5) return 'kda-green';
+    return 'kda-red';
   };
 
   const getScoreClass = (score) => {
-    if (score >= 60) return 'score-high';
-    if (score >= 45) return 'score-mid';
-    return 'score-low';
+    if (score === '-' || isNaN(score)) return '';
+    if (score < 45) return 'score-red';
+    if (score > 85) return 'score-gold';
+    return 'score-green';
   };
 
   // Role quest helpers
@@ -246,14 +247,26 @@ export default function MatchDetail({ match, focusName }) {
 
         {/* AI Score */}
         <div className="md-score-cell">
-          <span className={`md-score-value ${getScoreClass(score)}`}>{score}</span>
+          <span className={`md-score-value ${getScoreClass(score)}`}
+            style={score === '-' || isNaN(score) ? {} : score < 45 ? { color: '#F87171' } : score > 80 ? { color: '#D4AF37' } : { color: '#34D399' }}
+          >{score}</span>
           <span className="md-score-placement">{placement}</span>
         </div>
 
         {/* KDA */}
         <div className="md-kda-cell">
           <span className="md-kda-numbers">{getKdaString(p)}</span>
-          <span className={`md-kda-ratio ${getKdaClass(p)}`}>{getKdaRatio(p)}</span>
+          <span
+            className={`md-kda-ratio ${getKdaClass(p)}`}
+            style={(() => {
+              const d = p.deaths ?? 0;
+              if (d === 0) return { color: '#34D399' };
+              const ratio = ((p.kills ?? 0) + (p.assists ?? 0)) / d;
+              if (ratio > 5) return { color: '#D4AF37' };
+              if (ratio > 1.5) return { color: '#34D399' };
+              return { color: '#F87171' };
+            })()}
+          >{getKdaRatio(p)}</span>
         </div>
 
         {/* Damage */}
@@ -275,7 +288,10 @@ export default function MatchDetail({ match, focusName }) {
 
         {/* KP */}
         <div className="md-kp-cell">
-          <span className={`md-kp-value ${kp >= 70 ? 'kp-high' : kp >= 50 ? 'kp-mid' : ''}`}>{kp}%</span>
+          <span
+            className={`md-kp-value`}
+            style={kp < 30 ? { color: '#F87171' } : kp > 60 ? { color: '#D4AF37' } : { color: '#34D399' }}
+          >{kp}%</span>
         </div>
 
         {/* Items + Role Quest */}

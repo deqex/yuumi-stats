@@ -43,13 +43,28 @@ export default function MatchCard({ data, focusName }) {
 
   const SimpleScore = (p) => {
     if (typeof p?.opScore === 'number') {
-      return <span style={{ fontWeight: 700, color: '#FBBF24' }}>{Math.round(p.opScore)}</span>;
+      const score = Math.round(p.opScore);
+      let style = { fontWeight: 700 };
+      if (score < 45) style.color = '#F87171';
+      else if (score > 85) {
+        style.color = '#ff9900';
+      } else {
+        style.color = '#34D399';
+      }
+      return <span style={style}>{score}</span>;
     }
     const k = p?.kills ?? 0;
     const a = p?.assists ?? 0;
     const d = p?.deaths ?? 0;
     const sc = Math.round(k * 1.5 + a - d); // placeholder OP score
-    return <span style={{ fontWeight: 700, color: '#FBBF24' }}>{isNaN(sc) ? '-' : sc}</span>;
+    let style = { fontWeight: 700 };
+    if (sc < 45) style.color = '#F87171';
+    else if (sc > 85) {
+      style.color = '#FFD700';
+    } else {
+      style.color = '#34D399';
+    }
+    return <span style={style}>{isNaN(sc) ? '-' : sc}</span>;
   };
 
   const scoreTooltip = (p) => {

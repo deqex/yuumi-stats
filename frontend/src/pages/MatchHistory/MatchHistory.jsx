@@ -644,7 +644,10 @@ export default function MatchHistory() {
               {/* AI Score & Position */}
               <div className="match-score-section">
                 <div className="score-container">
-                  <div className="ai-score-badge">
+                  <div
+                    className="ai-score-badge"
+                    style={roundedAiScore === null ? {} : roundedAiScore < 45 ? { background: '#F87171', color: '#fff' } : roundedAiScore > 85 ? { background: '#D4AF37', color: '#fff' } : { background: '#34D399', color: '#fff' }}
+                  >
                     <span className="score-value">{roundedAiScore !== null ? roundedAiScore : '-'}</span>
                   </div>
                   <div className="position-badge">
@@ -825,7 +828,7 @@ export default function MatchHistory() {
                 </div>
                 <div className="performance-row">
                   <div className="performance-label">Avg AI Score</div>
-                  <div className="performance-value" style={{ color: '#A78BFA' }}>{profileStats.avgOpScore ?? '—'}</div>
+                  <div className="performance-value" style={profileStats.avgOpScore === null ? {} : profileStats.avgOpScore < 45 ? { color: '#F87171' } : profileStats.avgOpScore > 85 ? { color: '#FFD700' } : { color: '#34D399' }}>{profileStats.avgOpScore ?? '—'}</div>
                 </div>
                 {profileStats.avgCsPerMin !== null && (
                   <div className="performance-row">
