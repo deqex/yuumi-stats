@@ -309,21 +309,19 @@ export default function MatchDetail({ match, focusName }) {
 
           {/* Role quest / ADC boots slot */}
           <div className="md-item-slot md-item-quest" title="Role quest">
-            {(() => {
-              const questSrc = isADC
-                ? (adcBootsItem ? getItemIconUrl(adcBootsItem) : null)
-                : (questIdForRole ? QUEST_ICONS[questIdForRole] : null);
-
-              return questSrc ? (
-                <img
-                  src={questSrc}
-                  alt={isADC
-                    ? (adcBootsItem ? `ADC boots ${adcBootsItem}` : 'No boots')
-                    : (questIdForRole ? `Quest ${questIdForRole}` : 'No quest')}
-                  className="md-item-img"
-                />
-              ) : null;
-            })()}
+            {isADC ? (
+              <img
+                src={getItemIconUrl(adcBootsItem) || getItemIconUrl(1001)}
+                alt={adcBootsItem ? `ADC boots ${adcBootsItem}` : 'No boots'}
+                className="md-item-img"
+              />
+            ) : questIdForRole ? (
+              <img
+                src={QUEST_ICONS[questIdForRole]}
+                alt={`Quest ${questIdForRole}`}
+                className="md-item-img"
+              />
+            ) : null}
           </div>
         </div>
       </div>

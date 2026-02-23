@@ -24,6 +24,10 @@ export async function genScore(players, gameInfo) {
         //end of stupid code
 
         let score = kdaScore + damageScore + visionScore + csScore + enchanterScore + tankScore + goldScore + ccScore ;
+
+        if (gameInfo?.queueId === 450) {
+            score = score * 0.65;
+        }
         p.opScore = score;
         p.opBreakdown = {
             kdaScore,
