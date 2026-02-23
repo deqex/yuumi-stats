@@ -363,6 +363,26 @@ export default function MatchHistory() {
   const SimplifiedMatchCard = ({ match }) => {
     const players = Object.values(match.players);
     const focusPlayer = players.find(p => (p?.name || '').toLowerCase() === summonerName.toLowerCase());
+    const normalize = (s) => {
+      if (!s) return '';
+      try {
+        return String(s).normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+      } catch (e) {
+        return String(s).toLowerCase().replace(/[^a-z0-9]/gi, '');
+      }
+    };
+
+    // Debug: log focus detection values so we can verify matching in the browser console
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('MatchHistory focus check', {
+        summonerName,
+        normalizedSummoner: normalize(summonerName),
+        players: players.map(p => ({ name: p?.name, normalized: normalize(p?.name) }))
+      });
+    } catch (err) {
+      // silent
+    }
     
     if (!focusPlayer) return null;
 
@@ -665,7 +685,8 @@ export default function MatchHistory() {
             {blueTeam.map((p) => (
               <div
                 key={p?.puuid}
-                className={`player-item ${(p?.name || '').toLowerCase() === summonerName.toLowerCase() ? 'focus' : ''}`}
+                className={`player-item ${normalize(p?.name) === normalize(summonerName) ? 'focus' : ''}`}
+                data-focused={normalize(p?.name) === normalize(summonerName) ? 'true' : 'false'}
               >
                 {getChampionIconUrl(p?.championName) ? (
                   <img
@@ -676,7 +697,18 @@ export default function MatchHistory() {
                 ) : (
                   <span className="player-initial">{getChampionInitial(p?.championName)}</span>
                 )}
-                <span className="player-name">{p?.name}</span>
+                <button
+                  className="player-name player-name-clickable"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const tag = p?.riotIdTagline || '';
+                    const url = `${window.location.origin}/profile/${region}/${encodeURIComponent(p?.name || '')}-${encodeURIComponent(tag)}/overview`;
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                  aria-label={`Open profile for ${p?.name}`}
+                >
+                  {p?.name}
+                </button>
               </div>
             ))}
           </div>
@@ -684,7 +716,8 @@ export default function MatchHistory() {
             {redTeam.map((p) => (
               <div
                 key={p?.puuid}
-                className={`player-item ${(p?.name || '').toLowerCase() === summonerName.toLowerCase() ? 'focus' : ''}`}
+                className={`player-item ${normalize(p?.name) === normalize(summonerName) ? 'focus' : ''}`}
+                data-focused={normalize(p?.name) === normalize(summonerName) ? 'true' : 'false'}
               >
                 {getChampionIconUrl(p?.championName) ? (
                   <img
@@ -695,7 +728,18 @@ export default function MatchHistory() {
                 ) : (
                   <span className="player-initial">{getChampionInitial(p?.championName)}</span>
                 )}
-                <span className="player-name">{p?.name}</span>
+                <button
+                  className="player-name player-name-clickable"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const tag = p?.riotIdTagline || '';
+                    const url = `${window.location.origin}/profile/${region}/${encodeURIComponent(p?.name || '')}-${encodeURIComponent(tag)}/overview`;
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                  aria-label={`Open profile for ${p?.name}`}
+                >
+                  {p?.name}
+                </button>
               </div>
             ))}
           </div>

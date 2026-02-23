@@ -795,14 +795,14 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 9px;
+  font-size: 12px;
   color: #E5E7EB;
   white-space: nowrap;
   min-width: 0;
 }
 
 .player-name {
-  font-size: 11px;
+  font-size: 12px;
   color: #E5E7EB;
   font-weight: 400;
   overflow: hidden;
@@ -810,8 +810,34 @@ body {
   min-width: 0;
 }
 
-.player-item.focus {
-  color: #A78BFA;
+./* Bold the focused player's name inside the match-players-section */
+.match-players-section .player-item.focus .player-name,
+.match-players-section .player-item.focus .player-name-clickable {
+  font-weight: 900;
+}
+
+/* Clickable player names */
+.player-name-clickable {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.player-name-clickable:hover {
+  text-decoration: underline;
+}
+
+/* Focused player: make the name bold (remove debug outline) */
+.match-players-section .player-item.focus .player-name,
+.match-players-section .player-item[data-focused="true"] .player-name,
+.match-players-section .player-item.focus .player-name-clickable,
+.match-players-section .player-item[data-focused="true"] .player-name-clickable {
+  font-weight: 900 !important;
 }
 
 .player-initial {
