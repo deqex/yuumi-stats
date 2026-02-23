@@ -251,6 +251,19 @@ export default function MatchDetail({ match, focusName }) {
             style={score === '-' || isNaN(score) ? {} : score < 45 ? { color: '#F87171' } : score > 80 ? { color: '#D4AF37' } : { color: '#34D399' }}
           >{score}</span>
           <span className="md-score-placement">{placement}</span>
+          {p.opBreakdown && (
+            <div className="md-score-breakdown" role="tooltip" aria-hidden={false}>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">KDA</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.kdaScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Damage</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.damageScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Vision</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.visionScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CS</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.csScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Enchanter</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.enchanterScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Tank</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.tankScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Gold</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.goldScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CC</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.ccScore)}</span></div>
+              <div className="md-breakdown-total"><span className="md-breakdown-label">Total</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.total)}</span></div>
+            </div>
+          )}
         </div>
 
         {/* KDA */}

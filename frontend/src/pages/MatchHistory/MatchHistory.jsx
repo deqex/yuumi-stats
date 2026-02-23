@@ -673,6 +673,20 @@ export default function MatchHistory() {
                   <div className="position-badge">
                     <span className="position-value">{placementLabel}</span>
                   </div>
+                    {/* Breakdown tooltip (shows on hover/focus) */}
+                    {focusPlayer.opBreakdown && (
+                      <div className="score-breakdown" role="tooltip" aria-hidden={false}>
+                        <div className="breakdown-row"><span className="breakdown-label">KDA</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.kdaScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Damage</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.damageScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Vision</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.visionScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">CS</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.csScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Enchanter</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.enchanterScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Tank</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.tankScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Gold</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.goldScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">CC</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.ccScore)}</span></div>
+                        <div className="breakdown-total"><span className="breakdown-label">Total</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.total)}</span></div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

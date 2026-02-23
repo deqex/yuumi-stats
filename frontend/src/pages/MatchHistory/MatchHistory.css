@@ -435,7 +435,7 @@ body {
 /* Updated Match Card */
 .match-card {
   border-radius: 7px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.2s;
   cursor: pointer;
@@ -741,6 +741,54 @@ body {
   gap: 6px;
   align-items: center;
 }
+
+/* Tooltip for score breakdown */
+.score-container {
+  position: relative; /* anchor for tooltip */
+}
+
+.score-breakdown {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(17, 24, 39, 0.98);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.6);
+  min-width: 180px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 30;
+}
+
+.score-container:hover .score-breakdown,
+.score-container:focus-within .score-breakdown {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.score-breakdown .breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.score-breakdown .breakdown-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 6px;
+  font-weight: 700;
+}
+.breakdown-label { color: #cbd5e1; }
+.breakdown-value { color: #fff; }
 
 .ai-score-badge {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);

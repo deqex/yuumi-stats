@@ -3,7 +3,7 @@
 .match-detail-panel {
   background: #0f1923;
   border-radius: 0 0 7px 7px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #1e2a3a;
   border-top: none;
   margin-top: -2px;
@@ -269,6 +269,54 @@
   gap: 2px;
   flex-shrink: 0;
 }
+
+/* Tooltip for detailed match score breakdown */
+.md-score-cell {
+  position: relative;
+}
+
+.md-score-breakdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(10, 18, 23, 0.98);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.6);
+  min-width: 180px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  z-index: 40;
+}
+
+.md-score-cell:hover .md-score-breakdown,
+.md-score-cell:focus-within .md-score-breakdown {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.md-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.md-breakdown-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  margin-top: 6px;
+  font-weight: 700;
+}
+.md-breakdown-label { color: #9CA3AF; }
+.md-breakdown-value { color: #fff; }
 
 .md-score-value {
   font-weight: 800;
