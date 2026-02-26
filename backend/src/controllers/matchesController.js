@@ -38,22 +38,6 @@ function getCachedPuuid(summonerName, summonerTag, region) {
     return promise;
 }
 
-const POSITION_TO_ROLE = {
-    TOP: "TOP",
-    JUNGLE: "JUNGLE",
-    MIDDLE: "MIDDLE",
-    BOTTOM: "BOTTOM",
-    UTILITY: "SUPPORT",
-};
-
-const POSITION_TO_QUEST_ID = {
-    TOP: 1221,
-    JUNGLE: 1209,
-    MIDDLE: 1206,
-    UTILITY: 1208,
-};
-
-
 async function saveMatchToDb(matchData, region) {
     try {
         const { metadata, info } = matchData;
@@ -71,10 +55,8 @@ async function saveMatchToDb(matchData, region) {
             championId: p.championId,
             championName: p.championName,
             teamId: p.teamId,
-            teamPosition: p.teamPosition ?? '',
-            individualPosition: p.individualPosition ?? '',
-            role: POSITION_TO_ROLE[p.teamPosition] || "MIDDLE",
-            roleQuestId: POSITION_TO_QUEST_ID[p.teamPosition] ?? null,
+            role: p.lane,
+            roleQuestId: p.roleBoundItem,
             win: p.win,
             kills: p.kills,
             deaths: p.deaths,

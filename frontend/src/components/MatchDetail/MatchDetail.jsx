@@ -7,11 +7,7 @@ import SorceryTreeIcon from '../../utils/DDragon/runes/7202_Sorcery.png';
 import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
 import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
 
-// Role quest icons (Top / Jungle / Mid / Support)
-import QuestMid from '../../utils/DDragon/role-quests/1206.png';
-import QuestSupport from '../../utils/DDragon/role-quests/1208.png';
-import QuestJungle from '../../utils/DDragon/role-quests/1209.png';
-import QuestTop from '../../utils/DDragon/role-quests/1221.png';
+
 
 const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
 const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
@@ -153,13 +149,7 @@ export default function MatchDetail({ match, focusName }) {
     return 'score-green';
   };
 
-  // Role quest helpers
-  const QUEST_ICONS = {
-    1206: QuestMid,
-    1208: QuestSupport,
-    1209: QuestJungle,
-    1221: QuestTop,
-  };
+
 
   const BOOTS_ITEM_IDS = new Set([
     1001, 3006, 3009, 3020, 3047, 3111, 3117, 3158,
@@ -190,11 +180,10 @@ export default function MatchDetail({ match, focusName }) {
 
     const isBootsItem = (id) => id && BOOTS_ITEM_IDS.has(id);
 
-    let questIdForRole = 0;
-    if (isJungle) questIdForRole = 1209;
-    else if (isSupport) questIdForRole = 1208;
-    else if (isTop) questIdForRole = 1221;
-    else if (isMid) questIdForRole = 1206;
+
+    // Use roleQuestId from DB (always present if available)
+    const questIdForRole = p.roleQuestId || 0;
+
 
     const adcBootsItem = isADC ? (items.find(id => isBootsItem(id)) || 0) : 0;
 
@@ -320,17 +309,11 @@ export default function MatchDetail({ match, focusName }) {
             );
           })}
 
-          {/* Role quest / ADC boots slot */}
+          {/* Role quest slot (all roles, including ADC) */}
           <div className="md-item-slot md-item-quest" title="Role quest">
-            {isADC ? (
+            {questIdForRole ? (
               <img
-                src={getItemIconUrl(adcBootsItem) || getItemIconUrl(1001)}
-                alt={adcBootsItem ? `ADC boots ${adcBootsItem}` : 'No boots'}
-                className="md-item-img"
-              />
-            ) : questIdForRole ? (
-              <img
-                src={QUEST_ICONS[questIdForRole]}
+                src={getItemIconUrl(questIdForRole)}
                 alt={`Quest ${questIdForRole}`}
                 className="md-item-img"
               />
