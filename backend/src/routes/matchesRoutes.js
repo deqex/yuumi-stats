@@ -9,6 +9,7 @@ import {
     getLiveGame,
     getParticipantStats,
 } from "../controllers/matchesController.js";
+import { getAnalysisData } from "../controllers/analysisController.js";
 
 const require = createRequire(import.meta.url);
 const queuesData = require("../utils/queues.json");
@@ -23,5 +24,6 @@ router.get("/match-ids", getMatchIds);
 router.get("/match/:matchId", getMatchData);
 router.get("/live-game", getLiveGame);
 router.get("/participant-stats", getParticipantStats);
+router.get("/analysis", getAnalysisData);
 
 export default router;

@@ -1,40 +1,8 @@
 import Profile from "../models/Profile.js";
-import { getBroadRegion } from "../utils/getBroadRegion.js";
+import { getCachedPuuid } from "../utils/getPuuid.js";
+import { getApiKey } from "../utils/getApiKey.js";
+import { riotFetch } from "../utils/riotFetch.js";
 
-function getApiKey() {
-    const key = process.env.RIOT_API_KEY;
-    if (!key) throw new Error("Missing RIOT_API_KEY in backend .env");
-    return key;
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function riotFetch(url, retries = 3) {
-    for (let i = 0; i <= retries; i++) {
-        const res = await fetch(url);
-        if (res.status === 429 && i < retries) {
-            const retryAfter = parseInt(res.headers.get("Retry-After") || "1", 10);
-            console.warn(`Rate limited by Riot API, retrying in ${retryAfter}s...`);
-            await sleep(retryAfter * 1000);
-            continue;
-        }
-        return res;
-    }
-}
-
-async function fetchPuuid(summonerName, summonerTag, region) {
-    const broadRegion = getBroadRegion(region);
-    const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}?api_key=${getApiKey()}`;
-    const res = await riotFetch(url);
-    if (res.status === 404) {
-        const err = new Error(`Player "${summonerName}#${summonerTag}" not found`);
-        err.statusCode = 404;
-        throw err;
-    }
-    if (!res.ok) throw new Error(`Riot API error (puuid): ${res.status}`);
-    const data = await res.json();
-    return data.puuid;
-}
 
 async function fetchSummoner(puuid, region) {
     const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${getApiKey()}`;
@@ -101,7 +69,7 @@ export async function getProfile(req, res) {
         }
 
         console.log(`[API] fetching profile for ${fullName} (${region})`);
-        const puuid = await fetchPuuid(summonerName, summonerTag, region);
+        const puuid = await getCachedPuuid(summonerName, summonerTag, region);
         const [summoner, rankEntries] = await Promise.all([
             fetchSummoner(puuid, region),
             fetchRanks(puuid, region),

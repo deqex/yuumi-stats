@@ -171,7 +171,7 @@ export default function MatchDetail({ match, focusName }) {
     const items = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6];
 
     // Lane / role detection
-    const lanePos = (p.teamPosition || p.individualPosition || '').toUpperCase();
+    const lanePos = (p.individualPosition || '').toUpperCase();
     const isSupport = lanePos === 'UTILITY';
     const isJungle = lanePos === 'JUNGLE';
     const isTop = lanePos === 'TOP';

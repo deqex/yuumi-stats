@@ -219,7 +219,7 @@ export default function MatchHistory() {
         opScoreCount++;
       }
 
-      const isSupport = (fp.teamPosition || fp.individualPosition || '').toUpperCase() === 'UTILITY';
+      const isSupport = (fp.individualPosition || '').toUpperCase() === 'UTILITY';
       if (!isSupport) {
         const cs = (fp.totalMinionsKilled || 0) + (fp.neutralMinionsKilled || 0);
         const durationSecs = fp.timePlayed || m.gameInfo?.gameDuration || 0;
@@ -486,7 +486,7 @@ export default function MatchHistory() {
       3158, // Ionian Boots of Lucidity
     ]);
 
-    const lanePos = (focusPlayer.teamPosition || focusPlayer.individualPosition || '').toUpperCase();
+    const lanePos = (focusPlayer.individualPosition || '').toUpperCase();
     const isSupport = lanePos === 'UTILITY';
     const isJungle = lanePos === 'JUNGLE';
     const isTop = lanePos === 'TOP';
@@ -793,7 +793,10 @@ export default function MatchHistory() {
             >
               Mastery
             </button>
-            <button className="profile-tab-button disabled">
+            <button
+              className="profile-tab-button"
+              onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/analysis`)}
+            >
               Analysis
             </button>
             <button

@@ -1,42 +1,9 @@
 import { getBroadRegion } from "../utils/getBroadRegion.js";
 import Match from "../models/Match.js";
+import { getCachedPuuid } from "../utils/getPuuid.js";
+import { getApiKey } from "../utils/getApiKey.js";
+import { riotFetch } from "../utils/riotFetch.js";
 
-function getApiKey() {
-    const key = process.env.RIOT_API_KEY;
-    if (!key) throw new Error("Missing RIOT_API_KEY in backend .env");
-    return key;
-}
-
-const puuidCache    = new Map();
-const puuidInflight = new Map();
-const PUUID_TTL     = 5 * 60 * 1000;
-
-function getCachedPuuid(summonerName, summonerTag, region) {
-    const key = `${summonerName.toLowerCase()}#${summonerTag.toLowerCase()}@${region.toLowerCase()}`;
-
-    const cached = puuidCache.get(key);
-    if (cached && Date.now() - cached.ts < PUUID_TTL) {
-        return Promise.resolve(cached.puuid);
-    }
-
-    if (puuidInflight.has(key)) {
-        return puuidInflight.get(key);
-    }
-
-    const promise = fetchPuuid(summonerName, summonerTag, region)
-        .then((puuid) => {
-            puuidCache.set(key, { puuid, ts: Date.now() });
-            puuidInflight.delete(key);
-            return puuid;
-        })
-        .catch((err) => {
-            puuidInflight.delete(key);
-            throw err;
-        });
-
-    puuidInflight.set(key, promise);
-    return promise;
-}
 
 async function saveMatchToDb(matchData, region) {
     try {
@@ -55,7 +22,7 @@ async function saveMatchToDb(matchData, region) {
             championId: p.championId,
             championName: p.championName,
             teamId: p.teamId,
-            role: p.lane,
+            individualPosition: p.individualPosition ?? '',
             roleQuestId: p.roleBoundItem,
             win: p.win,
             kills: p.kills,
@@ -81,6 +48,32 @@ async function saveMatchToDb(matchData, region) {
             firstBloodAssist: p.firstBloodAssist ?? false,
             largestMultiKill: p.largestMultiKill ?? 0,
             objectivesStolen: p.objectivesStolen ?? 0,
+            // additional stats
+            controlWardsPlaced: p.challenges?.controlWardsPlaced ?? 0,
+            damageDealtToTurrets: p.damageDealtToTurrets ?? 0,
+            totalAllyJungleMinionsKilled: p.totalAllyJungleMinionsKilled ?? 0,
+            totalEnemyJungleMinionsKilled: p.totalEnemyJungleMinionsKilled ?? 0,
+            gameEndedInSurrender: p.gameEndedInSurrender ?? false,
+            gameEndedInEarlySurrender: p.gameEndedInEarlySurrender ?? false,
+            // challenges
+            epicMonsterSteals: p.challenges?.epicMonsterSteals ?? 0,
+            flawlessAces: p.challenges?.flawlessAces ?? 0,
+            hadOpenNexus: p.challenges?.hadOpenNexus ?? 0,
+            perfectGame: p.challenges?.perfectGame ?? 0,
+            takedownsInEnemyFountain: p.challenges?.takedownsInEnemyFountain ?? 0,
+            earliestBaron: p.challenges?.earliestBaron ?? 0,
+            elderDragonKillsWithOpposingSoul: p.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
+            dancedWithRiftHerald: p.challenges?.dancedWithRiftHerald ?? 0,
+            healFromMapSources: p.challenges?.HealFromMapSources ?? 0,
+            dragonTakedowns: p.challenges?.dragonTakedowns ?? 0,
+            scuttleCrabKills: p.challenges?.scuttleCrabKills ?? 0,
+            stealthWardsPlaced: p.challenges?.stealthWardsPlaced ?? 0,
+            wardTakedowns: p.challenges?.wardTakedowns ?? 0,
+            killsNearEnemyTurret: p.challenges?.killsNearEnemyTurret ?? 0,
+            maxCsAdvantageOnLaneOpponent: p.challenges?.maxCsAdvantageOnLaneOpponent ?? 0,
+            takedownsAfterGainingLevelAdvantage: p.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
+            takedownsBeforeJungleMinionSpawn: p.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
+            abilityUses: p.challenges?.abilityUses ?? 0,
             item0: p.item0 ?? 0,
             item1: p.item1 ?? 0,
             item2: p.item2 ?? 0,
@@ -115,35 +108,7 @@ async function saveMatchToDb(matchData, region) {
 
 
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-
-async function riotFetch(url, retries = 3) {
-    for (let i = 0; i <= retries; i++) {
-        const res = await fetch(url);
-        if (res.status === 429 && i < retries) {
-            const retryAfter = parseInt(res.headers.get("Retry-After") || "1", 10);
-            console.warn(`Rate limited by Riot API, retrying in ${retryAfter}s...`);
-            await sleep(retryAfter * 1000);
-            continue;
-        }
-        return res;
-    }
-}
-
-async function fetchPuuid(summonerName, summonerTag, region) {
-    const broadRegion = getBroadRegion(region);
-    const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}?api_key=${getApiKey()}`;
-    const res = await riotFetch(url);
-    if (res.status === 404) {
-        const err = new Error(`Player "${summonerName}#${summonerTag}" not found`);
-        err.statusCode = 404;
-        throw err;
-    }
-    if (!res.ok) throw new Error(`Riot API error (puuid): ${res.status}`);
-    const { puuid } = await res.json();
-    return puuid;
-}
 
 
 
@@ -396,6 +361,278 @@ export async function getRankEntries(req, res) {
         return res.json(ranks);
     } catch (error) {
         console.error("getRankEntries error:", error);
+        const status = error.statusCode || 500;
+        return res.status(status).json({ error: error.message });
+    }
+}
+
+export async function getAnalysisData(req, res) {
+    try {
+        const { summonerName, summonerTag, region, roles: rolesParam, queues: queuesParam } = req.query;
+        if (!summonerName || !summonerTag || !region) {
+            return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
+        }
+
+        // Parse optional filter params
+        const allowedRoles  = rolesParam  ? new Set(rolesParam.split(',').map(r => r.trim().toUpperCase())) : null;
+        const allowedQueues = queuesParam ? new Set(queuesParam.split(',').map(Number)) : null;
+
+        const puuid = await getCachedPuuid(summonerName, summonerTag, region);
+        const broadRegion = getBroadRegion(region);
+        const apiKey = getApiKey();
+
+        const now       = Math.floor(Date.now() / 1000);
+        const startTime = now - 14 * 24 * 60 * 60;
+
+        const matchIdsRes = await riotFetch(
+            `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${startTime}&endTime=${now}&count=100&api_key=${apiKey}`
+        );
+        if (!matchIdsRes.ok) throw new Error(`Riot API error (analysis matchIds): ${matchIdsRes.status}`);
+        const matchIds = await matchIdsRes.json();
+        console.log(`[API] analysis: ${matchIds.length} match IDs fetched for ${summonerName}#${summonerTag} | roles=${rolesParam || 'all'} queues=${queuesParam || 'all'}`);
+
+        // Helper to create a stat tracker { total, min, max }
+        const tracker = () => ({ total: 0, min: Infinity, max: -Infinity });
+        const update = (t, val) => {
+            t.total += val;
+            if (val < t.min) t.min = val;
+            if (val > t.max) t.max = val;
+        };
+
+        let totalGames = 0, wins = 0;
+        let totalAiScore = 0, totalKP = 0;
+
+        // Performance trackers
+        const kills = tracker(), deaths = tracker(), assists = tracker();
+        const cs = tracker(), visionScore = tracker(), aiScore = tracker();
+        const kp = tracker(), gameLength = tracker();
+
+        // Highlights (totals only, no dropdown)
+        let firstBloods = 0, forfeits = 0;
+        const uniqueChampions = new Set();
+        let epicMonsterSteals = 0, flawlessAces = 0, hadOpenNexus = 0;
+        let perfectGames = 0, takedownsInEnemyFountain = 0;
+        let elderDragonKillsWithOpposingSoul = 0, dancedWithRiftHerald = 0;
+        let minEarliestBaron = Infinity;
+
+        // Deep stat trackers
+        const healFromMap = tracker(), controlWards = tracker();
+        const dragonTakedowns = tracker(), scuttleKills = tracker();
+        const stealthWards = tracker(), wardKills = tracker();
+        const dmgToTurrets = tracker(), selfMitigated = tracker();
+        const allyJungle = tracker(), dmgToChamps = tracker();
+        const enemyJungle = tracker(), healsOnTeam = tracker();
+        const killsNearTurret = tracker(), maxCsAdv = tracker();
+        const takedownsAfterLevel = tracker(), takedownsBeforeJungle = tracker();
+        const abilityUses = tracker();
+
+        for (const matchId of matchIds) {
+            let p = null;
+            let allParticipants = null;
+            let gameDuration = 0;
+            let queueId = null;
+
+            const cached = await Match.findOne({ matchId }).lean();
+            if (cached) {
+                console.log(`[DB] analysis ${matchId}`);
+                queueId = cached.queueId;
+                if (allowedQueues && !allowedQueues.has(queueId)) continue;
+                p = cached.participantSummaries.find(ps => ps.puuid === puuid);
+                allParticipants = cached.participantSummaries;
+                gameDuration = cached.gameDuration;
+            } else {
+                console.log(`[API] fetching ${matchId} (analysis)`);
+                const matchRes = await riotFetch(
+                    `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`
+                );
+                if (!matchRes.ok) continue;
+                const matchData = await matchRes.json();
+                saveMatchToDb(matchData, region);
+                queueId = matchData.info?.queueId;
+                if (allowedQueues && !allowedQueues.has(queueId)) continue;
+                allParticipants = matchData.info?.participants || [];
+                const rawP = allParticipants.find(pl => pl.puuid === puuid);
+                gameDuration = matchData.info?.gameDuration || 0;
+                if (rawP) {
+                    p = {
+                        ...rawP,
+                        individualPosition: rawP.individualPosition ?? '',
+                        controlWardsPlaced: rawP.challenges?.controlWardsPlaced ?? 0,
+                        epicMonsterSteals: rawP.challenges?.epicMonsterSteals ?? 0,
+                        flawlessAces: rawP.challenges?.flawlessAces ?? 0,
+                        hadOpenNexus: rawP.challenges?.hadOpenNexus ?? 0,
+                        perfectGame: rawP.challenges?.perfectGame ?? 0,
+                        takedownsInEnemyFountain: rawP.challenges?.takedownsInEnemyFountain ?? 0,
+                        earliestBaron: rawP.challenges?.earliestBaron ?? 0,
+                        elderDragonKillsWithOpposingSoul: rawP.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
+                        dancedWithRiftHerald: rawP.challenges?.dancedWithRiftHerald ?? 0,
+                        healFromMapSources: rawP.challenges?.HealFromMapSources ?? 0,
+                        dragonTakedowns: rawP.challenges?.dragonTakedowns ?? 0,
+                        scuttleCrabKills: rawP.challenges?.scuttleCrabKills ?? 0,
+                        stealthWardsPlaced: rawP.challenges?.stealthWardsPlaced ?? 0,
+                        wardTakedowns: rawP.challenges?.wardTakedowns ?? 0,
+                        killsNearEnemyTurret: rawP.challenges?.killsNearEnemyTurret ?? 0,
+                        maxCsAdvantageOnLaneOpponent: rawP.challenges?.maxCsAdvantageOnLaneOpponent ?? 0,
+                        takedownsAfterGainingLevelAdvantage: rawP.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
+                        takedownsBeforeJungleMinionSpawn: rawP.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
+                        abilityUses: rawP.challenges?.abilityUses ?? 0,
+                    };
+                }
+            }
+
+            if (!p) continue;
+
+            // Role filter — uses individualPosition (TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY).
+            // ARAM (queueId 450) has no assigned position so always passes through.
+            if (allowedRoles) {
+                const gameRole = p.individualPosition || '';
+                if (gameRole && gameRole !== 'NONE') {
+                    if (!allowedRoles.has(gameRole)) continue;
+                } else if (queueId !== 450) {
+                    console.log(`[Analysis] skip ${matchId} — unknown individualPosition (individualPosition="${gameRole}")`);
+                    continue;
+                }
+            }
+
+            // Skip remakes and games ended before 14 minutes
+            if (gameDuration < 14 * 60) {
+                console.log(`[Analysis] skip ${matchId} — too short (${Math.round(gameDuration / 60)}m)`);
+                continue;
+            }
+
+            const teamKills = allParticipants
+                .filter(pl => pl.teamId === p.teamId)
+                .reduce((sum, pl) => sum + (pl.kills || 0), 0);
+
+            totalGames++;
+            if (p.win) wins++;
+
+            // AI score
+            const totalGold = allParticipants.reduce((s, pl) => s + (pl.goldEarned || 0), 0);
+            const totalDmg  = allParticipants.reduce((s, pl) => s + (pl.totalDamageDealtToChampions || 0), 0);
+            const dur = gameDuration || 1;
+            let score = (((p.kills || 0) * 1.5 + (p.assists || 0) - (p.deaths || 0)) / dur) * 1200
+                + ((p.visionScore || 0) * 400 / dur)
+                + ((p.champExperience || 0) / dur)
+                + (((p.totalDamageShieldedOnTeammates || 0) + (p.totalHealsOnTeammates || 0)) * 1.3 / dur)
+                + (((p.totalDamageTaken || 0) + (p.damageSelfMitigated || 0)) / dur * 0.3)
+                + ((p.timeCCingOthers || 0) * 300 / dur)
+                + (totalGold > 0 ? ((p.goldEarned || 0) / totalGold) * 100 * 1.5 : 0)
+                + (totalDmg > 0 ? ((p.totalDamageDealtToChampions || 0) / totalDmg) * 100 * 1.6 : 0);
+            if (queueId === 450) score *= 0.65;
+            const roundedScore = Math.round(score);
+            const kpVal = teamKills > 0 ? Math.round(((p.kills + p.assists) / teamKills) * 100) : 0;
+            const csVal = (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);
+
+            // Performance
+            update(kills, p.kills || 0);
+            update(deaths, p.deaths || 0);
+            update(assists, p.assists || 0);
+            update(cs, csVal);
+            update(visionScore, p.visionScore || 0);
+            update(aiScore, roundedScore);
+            update(kp, kpVal);
+            update(gameLength, gameDuration || 0);
+
+            // Highlights
+            if (p.firstBloodKill || p.firstBloodAssist) firstBloods++;
+            if (p.gameEndedInSurrender && !p.win) forfeits++;
+            if (p.championName) uniqueChampions.add(p.championName);
+            epicMonsterSteals                += p.epicMonsterSteals || 0;
+            flawlessAces                     += p.flawlessAces || 0;
+            hadOpenNexus                     += p.hadOpenNexus || 0;
+            perfectGames                     += p.perfectGame || 0;
+            takedownsInEnemyFountain         += p.takedownsInEnemyFountain || 0;
+            elderDragonKillsWithOpposingSoul += p.elderDragonKillsWithOpposingSoul || 0;
+            dancedWithRiftHerald             += p.dancedWithRiftHerald || 0;
+            if (p.earliestBaron > 0 && p.earliestBaron < minEarliestBaron) {
+                minEarliestBaron = p.earliestBaron;
+            }
+
+            // Deep stats
+            update(healFromMap,           p.healFromMapSources || 0);
+            update(controlWards,          p.controlWardsPlaced || 0);
+            update(dragonTakedowns,       p.dragonTakedowns || 0);
+            update(scuttleKills,          p.scuttleCrabKills || 0);
+            update(stealthWards,          p.stealthWardsPlaced || 0);
+            update(wardKills,             p.wardTakedowns || 0);
+            update(dmgToTurrets,          p.damageDealtToTurrets || 0);
+            update(selfMitigated,         p.damageSelfMitigated || 0);
+            update(allyJungle,            p.totalAllyJungleMinionsKilled || 0);
+            update(dmgToChamps,           p.totalDamageDealtToChampions || 0);
+            update(enemyJungle,           p.totalEnemyJungleMinionsKilled || 0);
+            update(healsOnTeam,           p.totalHealsOnTeammates || 0);
+            update(killsNearTurret,       p.killsNearEnemyTurret || 0);
+            update(maxCsAdv,              p.maxCsAdvantageOnLaneOpponent || 0);
+            update(takedownsAfterLevel,   p.takedownsAfterGainingLevelAdvantage || 0);
+            update(takedownsBeforeJungle, p.takedownsBeforeJungleMinionSpawn || 0);
+            update(abilityUses,           p.abilityUses || 0);
+        }
+
+        const n = totalGames;
+        console.log(`[Analysis] complete — ${n}/${matchIds.length} games counted for ${summonerName}#${summonerTag}`);
+
+        // Build a stat object with avg, total, max, min
+        const stat = (t, round = false) => {
+            const avg = n > 0 ? (round ? Math.round(t.total / n) : +(t.total / n).toFixed(2)) : 0;
+            return {
+                avg,
+                total: round ? Math.round(t.total) : +t.total.toFixed(2),
+                max: t.max === -Infinity ? 0 : (round ? Math.round(t.max) : +t.max.toFixed(2)),
+                min: t.min === Infinity  ? 0 : (round ? Math.round(t.min) : +t.min.toFixed(2)),
+            };
+        };
+
+        return res.json({
+            totalGames: n,
+            wins,
+            losses: n - wins,
+            winRate: n > 0 ? Math.round((wins / n) * 100) : 0,
+            performance: {
+                kills:      stat(kills),
+                deaths:     stat(deaths),
+                assists:    stat(assists),
+                cs:         stat(cs),
+                visionScore: stat(visionScore),
+                aiScore:    stat(aiScore, true),
+                kp:         stat(kp, true),
+                gameLength: stat(gameLength, true),
+            },
+            highlights: {
+                firstBloods,
+                forfeits,
+                uniqueChampions: uniqueChampions.size,
+                epicMonsterSteals,
+                flawlessAces,
+                hadOpenNexus,
+                perfectGames,
+                takedownsInEnemyFountain,
+                elderDragonKillsWithOpposingSoul,
+                dancedWithRiftHerald,
+                earliestBaron: minEarliestBaron === Infinity ? null : Math.round(minEarliestBaron),
+            },
+            deepStats: {
+                healFromMapSources:           stat(healFromMap, true),
+                controlWardsPlaced:           stat(controlWards),
+                dragonTakedowns:              stat(dragonTakedowns),
+                scuttleCrabKills:             stat(scuttleKills),
+                stealthWardsPlaced:           stat(stealthWards),
+                wardTakedowns:                stat(wardKills),
+                damageDealtToTurrets:         stat(dmgToTurrets, true),
+                damageSelfMitigated:          stat(selfMitigated, true),
+                allyJungleMinions:            stat(allyJungle),
+                damageDealtToChampions:       stat(dmgToChamps, true),
+                enemyJungleMinions:           stat(enemyJungle),
+                healsOnTeammates:             stat(healsOnTeam, true),
+                killsNearEnemyTurret:         stat(killsNearTurret),
+                maxCsAdvantage:               stat(maxCsAdv),
+                takedownsAfterLevelAdvantage: stat(takedownsAfterLevel),
+                takedownsBeforeJungleMinionSpawn: stat(takedownsBeforeJungle),
+                abilityUses:                  stat(abilityUses, true),
+            },
+        });
+    } catch (error) {
+        console.error("getAnalysisData error:", error);
         const status = error.statusCode || 500;
         return res.status(status).json({ error: error.message });
     }

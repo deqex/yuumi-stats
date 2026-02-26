@@ -112,7 +112,10 @@ export default function ChampionMastery() {
             <button className="profile-tab-button active">
               Mastery
             </button>
-            <button className="profile-tab-button disabled">
+            <button
+              className="profile-tab-button"
+              onClick={() => navigate(`/profile/${region}/${summonerName}-${summonerTag}/analysis`)}
+            >
               Analysis
             </button>
             <button className="profile-tab-button disabled">

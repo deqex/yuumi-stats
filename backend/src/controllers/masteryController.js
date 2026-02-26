@@ -1,71 +1,8 @@
 import ChampionMastery from "../models/ChampionMastery.js";
-import { getBroadRegion } from "../utils/getBroadRegion.js";
+import { getCachedPuuid } from "../utils/getPuuid.js";
+import { getApiKey } from "../utils/getApiKey.js";
+import { riotFetch } from "../utils/riotFetch.js";
 
-function getApiKey() {
-    const key = process.env.RIOT_API_KEY;
-    if (!key) throw new Error("Missing RIOT_API_KEY in backend .env");
-    return key;
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-async function riotFetch(url, retries = 3) {
-    for (let i = 0; i <= retries; i++) {
-        const res = await fetch(url);
-        if (res.status === 429 && i < retries) {
-            const retryAfter = parseInt(res.headers.get("Retry-After") || "1", 10);
-            console.warn(`Rate limited by Riot API, retrying in ${retryAfter}s...`);
-            await sleep(retryAfter * 1000);
-            continue;
-        }
-        return res;
-    }
-}
-
-const puuidCache    = new Map();
-const puuidInflight = new Map();
-const PUUID_TTL     = 5 * 60 * 1000;
-
-function getCachedPuuid(summonerName, summonerTag, region) {
-    const key = `${summonerName.toLowerCase()}#${summonerTag.toLowerCase()}@${region.toLowerCase()}`;
-
-    const cached = puuidCache.get(key);
-    if (cached && Date.now() - cached.ts < PUUID_TTL) {
-        return Promise.resolve(cached.puuid);
-    }
-
-    if (puuidInflight.has(key)) {
-        return puuidInflight.get(key);
-    }
-
-    const promise = fetchPuuid(summonerName, summonerTag, region)
-        .then((puuid) => {
-            puuidCache.set(key, { puuid, ts: Date.now() });
-            puuidInflight.delete(key);
-            return puuid;
-        })
-        .catch((err) => {
-            puuidInflight.delete(key);
-            throw err;
-        });
-
-    puuidInflight.set(key, promise);
-    return promise;
-}
-
-async function fetchPuuid(summonerName, summonerTag, region) {
-    const broadRegion = getBroadRegion(region);
-    const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}?api_key=${getApiKey()}`;
-    const res = await riotFetch(url);
-    if (res.status === 404) {
-        const err = new Error(`Player "${summonerName}#${summonerTag}" not found`);
-        err.statusCode = 404;
-        throw err;
-    }
-    if (!res.ok) throw new Error(`Riot API error (puuid): ${res.status}`);
-    const { puuid } = await res.json();
-    return puuid;
-}
 
 async function saveMasteryToDb(puuid, region, champs) {
     const champions = champs.map((c) => ({
