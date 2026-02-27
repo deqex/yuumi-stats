@@ -145,6 +145,7 @@ export async function getAnalysisData(req, res) {
 
         let firstBloods = 0, forfeits = 0;
         const uniqueChampions = new Set();
+        const championStats = new Map();
         let epicMonsterSteals = 0, flawlessAces = 0, hadOpenNexus = 0;
         let perfectGames = 0, takedownsInEnemyFountain = 0;
         let elderDragonKillsWithOpposingSoul = 0, dancedWithRiftHerald = 0;
@@ -284,7 +285,21 @@ export async function getAnalysisData(req, res) {
 
                 if (p.firstBloodKill || p.firstBloodAssist) firstBloods++;
                 if (p.gameEndedInSurrender && !p.win) forfeits++;
-                if (p.championName) uniqueChampions.add(p.championName);
+                if (p.championName) {
+                    uniqueChampions.add(p.championName);
+                    if (!championStats.has(p.championName)) {
+                        championStats.set(p.championName, { games: 0, wins: 0, totalKills: 0, totalDeaths: 0, totalAssists: 0, totalCs: 0, totalGameDuration: 0, totalAiScore: 0 });
+                    }
+                    const cs_ = championStats.get(p.championName);
+                    cs_.games++;
+                    if (p.win) cs_.wins++;
+                    cs_.totalKills        += p.kills  || 0;
+                    cs_.totalDeaths       += p.deaths || 0;
+                    cs_.totalAssists      += p.assists || 0;
+                    cs_.totalCs           += csVal;
+                    cs_.totalGameDuration += gameDuration;
+                    cs_.totalAiScore      += roundedScore;
+                }
 
                 epicMonsterSteals                += p.epicMonsterSteals || 0;
                 flawlessAces                     += p.flawlessAces || 0;
@@ -334,6 +349,25 @@ export async function getAnalysisData(req, res) {
             };
         };
 
+        const mostPlayed = [...championStats.entries()]
+            .sort((a, b) => b[1].games - a[1].games)
+            .slice(0, 5)
+            .map(([championName, s]) => {
+                const minsPlayed = s.totalGameDuration / 60;
+                return {
+                    championName,
+                    games:       s.games,
+                    wins:        s.wins,
+                    winRate:     Math.round((s.wins / s.games) * 100),
+                    avgKills:    +(s.totalKills   / s.games).toFixed(1),
+                    avgDeaths:   +(s.totalDeaths  / s.games).toFixed(1),
+                    avgAssists:  +(s.totalAssists / s.games).toFixed(1),
+                    avgCsPerMin: minsPlayed > 0 ? +(s.totalCs / minsPlayed).toFixed(1) : 0,
+                    avgAiScore:  Math.round(s.totalAiScore / s.games),
+                    timePlayed:  Math.round(s.totalGameDuration),
+                };
+            });
+
         return res.json({
             totalGames: n,
             wins,
@@ -364,6 +398,8 @@ export async function getAnalysisData(req, res) {
                 dancedWithRiftHerald,
                 earliestBaron: minEarliestBaron === Infinity ? null : Math.round(minEarliestBaron),
             },
+
+            mostPlayed,
 
             deepStats: {
                 healFromMapSources:              stat(healFromMap, true),

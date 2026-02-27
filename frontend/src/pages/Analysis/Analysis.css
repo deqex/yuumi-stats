@@ -624,6 +624,130 @@
   font-weight: 700;
 }
 
+/* ── Most Played Champions ── */
+.champ-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.champ-card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid #EDE9F8;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.champ-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.1);
+}
+
+.champ-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.champ-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.champ-card-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.champ-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.champ-card-record {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+}
+
+.champ-rec-w  { color: #3d8b68; }
+.champ-rec-l  { color: #b85c5c; }
+.champ-wr-hi  { color: #3d8b68; }
+.champ-wr-lo  { color: #b85c5c; }
+
+.champ-card-kda-row {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.kda-k   { color: #3d8b68; }
+.kda-d   { color: #b85c5c; }
+.kda-a   { color: #9CA3AF; }
+.kda-sep { color: #E5E7EB; font-weight: 400; }
+
+.champ-card-kda-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #C4CAD4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: -4px;
+}
+
+.champ-card-bottom {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-top: 8px;
+  border-top: 1px solid #F3F0FA;
+  gap: 4px;
+}
+
+.champ-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.champ-mini-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.champ-mini-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #C4CAD4;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.champ-ai-val {
+  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
   .stat-cards-grid,

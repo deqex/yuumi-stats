@@ -63,6 +63,13 @@ function formatGameLength(secs) {
   return `${m}m ${s}s`;
 }
 
+function formatTimePlayed(secs) {
+  if (!secs) return '—';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
 function pick(statObj, mode) {
   if (!statObj) return '—';
   return statObj[mode] ?? '—';
@@ -447,6 +454,61 @@ export default function Analysis() {
                       <DeepStatCard label="Takedowns before jungle spawn" statObj={d?.takedownsBeforeJungleMinionSpawn} mode={viewMode} />
                     </div>
                   </div>
+
+                  {data.mostPlayed?.length > 0 && (
+                    <div className="analysis-section">
+                      <div className="analysis-section-header">
+                        <span className="section-title">Most Played Champions</span>
+                        <div className="section-divider" />
+                        <span className="section-subtitle">top {data.mostPlayed.length} by games</span>
+                      </div>
+                      <div className="champ-cards-grid">
+                        {data.mostPlayed.map(c => (
+                          <div key={c.championName} className="champ-card">
+                            <div className="champ-card-top">
+                              <img
+                                className="champ-card-icon"
+                                src={`https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion/${c.championName}.png`}
+                                alt={c.championName}
+                              />
+                              <div className="champ-card-identity">
+                                <span className="champ-card-name">{c.championName}</span>
+                                <span className="champ-card-record">
+                                  <span className="champ-rec-w">{c.wins}W</span>
+                                  {' '}
+                                  <span className="champ-rec-l">{c.games - c.wins}L</span>
+                                  {' · '}
+                                  <span className={c.winRate >= 50 ? 'champ-wr-hi' : 'champ-wr-lo'}>{c.winRate}%</span>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="champ-card-kda-row">
+                              <span className="kda-k">{c.avgKills}</span>
+                              <span className="kda-sep"> / </span>
+                              <span className="kda-d">{c.avgDeaths}</span>
+                              <span className="kda-sep"> / </span>
+                              <span className="kda-a">{c.avgAssists}</span>
+                            </div>
+                            <div className="champ-card-kda-label">avg K / D / A</div>
+                            <div className="champ-card-bottom">
+                              <div className="champ-mini-stat">
+                                <span className="champ-mini-val champ-ai-val">{c.avgAiScore}</span>
+                                <span className="champ-mini-label">AI Score</span>
+                              </div>
+                              <div className="champ-mini-stat">
+                                <span className="champ-mini-val">{c.avgCsPerMin}</span>
+                                <span className="champ-mini-label">CS / min</span>
+                              </div>
+                              <div className="champ-mini-stat">
+                                <span className="champ-mini-val">{formatTimePlayed(c.timePlayed)}</span>
+                                <span className="champ-mini-label">Time Played</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
