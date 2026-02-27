@@ -25,7 +25,6 @@ import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import dissectGeneralMatchData from '../../utils/dissectGeneralMatchData';
-import { genScore } from '../../utils/genScore';
 import { getSummoner } from '../../utils/getSummoner';
 import { getRanks } from '../../utils/getRanks';
 import { getProfile } from '../../utils/getProfile';
@@ -87,8 +86,7 @@ export default function MatchHistory() {
           if (!data || !data.info) continue; // skip failed fetches
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
-          const scoredPlayers = await genScore(players, gameInfo);
-          matchData.push({ matchId, players: scoredPlayers, gameInfo });
+          matchData.push({ matchId, players, gameInfo });
         } catch (e) {
           console.warn(`Skipping match ${matchId}:`, e);
         }
@@ -120,8 +118,7 @@ export default function MatchHistory() {
           if (!data || !data.info) continue;
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
-          const scoredPlayers = await genScore(players, gameInfo);
-          newMatchData.push({ matchId, players: scoredPlayers, gameInfo });
+          newMatchData.push({ matchId, players, gameInfo });
         } catch (e) {
           console.warn(`Skipping match ${matchId}:`, e);
         }
@@ -673,14 +670,16 @@ export default function MatchHistory() {
                     {/* Breakdown tooltip (shows on hover/focus) */}
                     {focusPlayer.opBreakdown && (
                       <div className="score-breakdown" role="tooltip" aria-hidden={false}>
-                        <div className="breakdown-row"><span className="breakdown-label">KDA</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.kdaScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">Damage</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.damageScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">Vision</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.visionScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">CS</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.csScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">Enchanter</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.enchanterScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">Tank</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.tankScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">Gold</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.goldScore)}</span></div>
-                        <div className="breakdown-row"><span className="breakdown-label">CC</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.ccScore)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">KDA</span><span className="breakdown-value">{focusPlayer.opBreakdown.kdaScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Damage</span><span className="breakdown-value">{focusPlayer.opBreakdown.damageScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Vision</span><span className="breakdown-value">{focusPlayer.opBreakdown.visionScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">CS</span><span className="breakdown-value">{focusPlayer.opBreakdown.csScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Enchanter</span><span className="breakdown-value">{focusPlayer.opBreakdown.enchanterScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Tank</span><span className="breakdown-value">{focusPlayer.opBreakdown.tankScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Gold</span><span className="breakdown-value">{focusPlayer.opBreakdown.goldScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">CC</span><span className="breakdown-value">{focusPlayer.opBreakdown.ccScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">Turret</span><span className="breakdown-value">{focusPlayer.opBreakdown.turretScore.toFixed(1)}</span></div>
+                        <div className="breakdown-row"><span className="breakdown-label">KP</span><span className="breakdown-value">{focusPlayer.opBreakdown.kpScore.toFixed(1)}</span></div>
                         <div className="breakdown-total"><span className="breakdown-label">Total</span><span className="breakdown-value">{Math.round(focusPlayer.opBreakdown.total)}</span></div>
                       </div>
                     )}
@@ -762,6 +761,15 @@ export default function MatchHistory() {
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </div>
+
+        {/* Badges — full-width bottom row */}
+        {focusPlayer.badges && focusPlayer.badges.length > 0 && (
+          <div className="match-badges">
+            {focusPlayer.badges.map((badge, i) => (
+              <span key={i} className={`match-badge${badge === 'MVP' ? ' match-badge-mvp' : ''}`}>{badge}</span>
+            ))}
+          </div>
+        )}
       </div>
       {isExpanded && (
         <MatchDetail match={match} focusName={summonerName} />

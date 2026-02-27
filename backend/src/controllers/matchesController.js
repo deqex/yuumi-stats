@@ -4,6 +4,7 @@ import { getCachedPuuid } from "../utils/getPuuid.js";
 import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
 import { genBadges } from "../utils/genBadges.js";
+import { genScore } from "../utils/genScore.js";
 
 
 async function saveMatchToDb(matchData, region) {
@@ -75,6 +76,8 @@ async function saveMatchToDb(matchData, region) {
             takedownsAfterGainingLevelAdvantage: p.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
             takedownsBeforeJungleMinionSpawn: p.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
             abilityUses: p.challenges?.abilityUses ?? 0,
+            killParticipation: p.challenges?.killParticipation ?? 0,
+            kda: p.challenges?.kda ?? 0,
             item0: p.item0 ?? 0,
             item1: p.item1 ?? 0,
             item2: p.item2 ?? 0,
@@ -515,19 +518,7 @@ export async function getAnalysisData(req, res) {
             if (p.win) wins++;
 
             // AI score
-            const totalGold = allParticipants.reduce((s, pl) => s + (pl.goldEarned || 0), 0);
-            const totalDmg  = allParticipants.reduce((s, pl) => s + (pl.totalDamageDealtToChampions || 0), 0);
-            const dur = gameDuration || 1;
-            let score = (((p.kills || 0) * 1.5 + (p.assists || 0) - (p.deaths || 0)) / dur) * 1200
-                + ((p.visionScore || 0) * 400 / dur)
-                + ((p.champExperience || 0) / dur)
-                + (((p.totalDamageShieldedOnTeammates || 0) + (p.totalHealsOnTeammates || 0)) * 1.3 / dur)
-                + (((p.totalDamageTaken || 0) + (p.damageSelfMitigated || 0)) / dur * 0.3)
-                + ((p.timeCCingOthers || 0) * 300 / dur)
-                + (totalGold > 0 ? ((p.goldEarned || 0) / totalGold) * 100 * 1.5 : 0)
-                + (totalDmg > 0 ? ((p.totalDamageDealtToChampions || 0) / totalDmg) * 100 * 1.6 : 0);
-            if (queueId === 450) score *= 0.65;
-            const roundedScore = Math.round(score);
+            const roundedScore = genScore(p, allParticipants, gameDuration, queueId).score;
             const kpVal = teamKills > 0 ? Math.round(((p.kills + p.assists) / teamKills) * 100) : 0;
             const csVal = (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);
 

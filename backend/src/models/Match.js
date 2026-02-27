@@ -89,6 +89,8 @@ const matchSchema = new mongoose.Schema({
     takedownsAfterGainingLevelAdvantage: { type: Number, default: 0 },
     takedownsBeforeJungleMinionSpawn: { type: Number, default: 0 },
     abilityUses: { type: Number, default: 0 },
+    killParticipation: { type: Number, default: 0 },
+    kda: { type: Number, default: 0 },
     item0: { type: Number, default: 0 },
     item1: { type: Number, default: 0 },
     item2: { type: Number, default: 0 },

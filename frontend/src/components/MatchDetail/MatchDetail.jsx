@@ -234,13 +234,6 @@ export default function MatchDetail({ match, focusName }) {
           </div>
         </div>
 
-        {/* Badges */}
-        <div className="md-badges-cell">
-          {p.badges && p.badges.map((badge, i) => (
-            <span key={i} className={`md-badge${badge === 'MVP' ? ' md-badge-mvp' : ''}`}>{badge}</span>
-          ))}
-        </div>
-
         {/* AI Score */}
         <div className="md-score-cell">
           <span className={`md-score-value ${getScoreClass(score)}`}
@@ -249,14 +242,16 @@ export default function MatchDetail({ match, focusName }) {
           <span className="md-score-placement">{placement}</span>
           {p.opBreakdown && (
             <div className="md-score-breakdown" role="tooltip" aria-hidden={false}>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">KDA</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.kdaScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Damage</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.damageScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Vision</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.visionScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">CS</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.csScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Enchanter</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.enchanterScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Tank</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.tankScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Gold</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.goldScore)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">CC</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.ccScore)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">KDA</span><span className="md-breakdown-value">{p.opBreakdown.kdaScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Damage</span><span className="md-breakdown-value">{p.opBreakdown.damageScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Vision</span><span className="md-breakdown-value">{p.opBreakdown.visionScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CS</span><span className="md-breakdown-value">{p.opBreakdown.csScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Enchanter</span><span className="md-breakdown-value">{p.opBreakdown.enchanterScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Tank</span><span className="md-breakdown-value">{p.opBreakdown.tankScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Gold</span><span className="md-breakdown-value">{p.opBreakdown.goldScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CC</span><span className="md-breakdown-value">{p.opBreakdown.ccScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Turret</span><span className="md-breakdown-value">{p.opBreakdown.turretScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">KP</span><span className="md-breakdown-value">{p.opBreakdown.kpScore.toFixed(1)}</span></div>
               <div className="md-breakdown-total"><span className="md-breakdown-label">Total</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.total)}</span></div>
             </div>
           )}
@@ -339,7 +334,6 @@ export default function MatchDetail({ match, focusName }) {
           <span className="md-team-label">({label})</span>
         </div>
         <div className="md-header-row">
-          <span className="md-header-col md-header-col-badges"></span>
           <span className="md-header-col md-header-col-score">AI-Score</span>
           <span className="md-header-col md-header-col-kda">KDA</span>
           <span className="md-header-col md-header-col-dmg">Damage</span>

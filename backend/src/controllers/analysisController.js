@@ -80,6 +80,8 @@ async function saveMatchToDb(matchData, region) {
             takedownsAfterGainingLevelAdvantage:p.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
             takedownsBeforeJungleMinionSpawn:   p.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
             abilityUses:                        p.challenges?.abilityUses ?? 0,
+            killParticipation:                  p.challenges?.killParticipation ?? 0,
+            kda:                                p.challenges?.kda ?? 0,
 
             item0: p.item0 ?? 0, item1: p.item1 ?? 0, item2: p.item2 ?? 0,
             item3: p.item3 ?? 0, item4: p.item4 ?? 0, item5: p.item5 ?? 0,
@@ -266,7 +268,7 @@ export async function getAnalysisData(req, res) {
                 totalGames++;
                 if (p.win) wins++;
 
-                const roundedScore = genScore(p, allParticipants, gameDuration, queueId);
+                const roundedScore = genScore(p, allParticipants, gameDuration, queueId).score;
 
                 const kpVal  = teamKills > 0 ? Math.round(((p.kills + p.assists) / teamKills) * 100) : 0;
                 const csVal  = (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);

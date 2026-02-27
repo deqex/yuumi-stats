@@ -1,10 +1,10 @@
 import { genScore } from './genScore.js';
 
 export function genBadges(participants, gameDuration, queueId) {
-    const withScores = participants.map(p => ({
-        ...p,
-        opScore: genScore(p, participants, gameDuration, queueId),
-    }));
+    const withScores = participants.map(p => {
+        const { score, breakdown } = genScore(p, participants, gameDuration, queueId);
+        return { ...p, opScore: score, opBreakdown: breakdown };
+    });
 
     const mvp = withScores.reduce(
         (best, p) => (p.opScore > (best?.opScore ?? -Infinity) ? p : best),
