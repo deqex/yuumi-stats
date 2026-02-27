@@ -260,6 +260,37 @@
   font-weight: 500;
 }
 
+.md-header-col-badges { width: 140px; }
+
+.md-badges-cell {
+  width: 140px;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.md-badge-mvp {
+  background: rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
+  border-color: rgba(212, 175, 55, 0.5);
+  font-size: 10px;
+}
+
+.md-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(167, 139, 250, 0.18);
+  color: #c4b5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
 /* ── AI Score Cell ── */
 .md-score-cell {
   width: 80px;
@@ -496,6 +527,14 @@
 }
 
 /* ── Responsive ── */
+
+/* Hide badges early */
+@media (max-width: 1200px) {
+  .md-badges-cell,
+  .md-header-col-badges {
+    display: none;
+  }
+}
 
 /* Hide Score + CS early */
 @media (max-width: 1400px) {

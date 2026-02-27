@@ -3,6 +3,7 @@ import Match from "../models/Match.js";
 import { getCachedPuuid } from "../utils/getPuuid.js";
 import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
+import { genBadges } from "../utils/genBadges.js";
 
 
 async function saveMatchToDb(matchData, region) {
@@ -161,12 +162,13 @@ export async function getMatchData(req, res) {
                     const dateObj = new Date(gameCreation);
                     if (!isNaN(dateObj)) gameCreation = dateObj.getTime();
                 }
+                const participantsWithBadges = genBadges(participantSummaries, cached.gameDuration, cached.queueId);
                 return res.json({
                     metadata: { matchId: id },
                     info: {
                         ...gameFields,
                         gameCreation,
-                        participants: participantSummaries
+                        participants: participantsWithBadges
                     }
                 });
             }
@@ -182,7 +184,12 @@ export async function getMatchData(req, res) {
 
         saveMatchToDb(matchData, region);
 
-        return res.json(matchData);
+        const participants = matchData.info?.participants ?? [];
+        const participantsWithBadges = genBadges(participants, matchData.info?.gameDuration, matchData.info?.queueId);
+        return res.json({
+            ...matchData,
+            info: { ...matchData.info, participants: participantsWithBadges },
+        });
     } catch (error) {
         console.error("getMatchData error:", error);
         return res.status(500).json({ error: error.message });

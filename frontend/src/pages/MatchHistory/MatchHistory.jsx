@@ -26,7 +26,6 @@ import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import dissectGeneralMatchData from '../../utils/dissectGeneralMatchData';
 import { genScore } from '../../utils/genScore';
-import { genBadges } from '../../utils/genBadges';
 import { getSummoner } from '../../utils/getSummoner';
 import { getRanks } from '../../utils/getRanks';
 import { getProfile } from '../../utils/getProfile';
@@ -89,8 +88,7 @@ export default function MatchHistory() {
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
           const scoredPlayers = await genScore(players, gameInfo);
-          const playersWithBadges = await genBadges(scoredPlayers, gameInfo);
-          matchData.push({ matchId, players: playersWithBadges, gameInfo });
+          matchData.push({ matchId, players: scoredPlayers, gameInfo });
         } catch (e) {
           console.warn(`Skipping match ${matchId}:`, e);
         }
@@ -123,8 +121,7 @@ export default function MatchHistory() {
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
           const scoredPlayers = await genScore(players, gameInfo);
-          const playersWithBadges = await genBadges(scoredPlayers, gameInfo);
-          newMatchData.push({ matchId, players: playersWithBadges, gameInfo });
+          newMatchData.push({ matchId, players: scoredPlayers, gameInfo });
         } catch (e) {
           console.warn(`Skipping match ${matchId}:`, e);
         }

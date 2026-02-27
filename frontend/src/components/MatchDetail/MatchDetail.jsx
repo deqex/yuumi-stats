@@ -234,6 +234,13 @@ export default function MatchDetail({ match, focusName }) {
           </div>
         </div>
 
+        {/* Badges */}
+        <div className="md-badges-cell">
+          {p.badges && p.badges.map((badge, i) => (
+            <span key={i} className={`md-badge${badge === 'MVP' ? ' md-badge-mvp' : ''}`}>{badge}</span>
+          ))}
+        </div>
+
         {/* AI Score */}
         <div className="md-score-cell">
           <span className={`md-score-value ${getScoreClass(score)}`}
@@ -332,6 +339,7 @@ export default function MatchDetail({ match, focusName }) {
           <span className="md-team-label">({label})</span>
         </div>
         <div className="md-header-row">
+          <span className="md-header-col md-header-col-badges"></span>
           <span className="md-header-col md-header-col-score">AI-Score</span>
           <span className="md-header-col md-header-col-kda">KDA</span>
           <span className="md-header-col md-header-col-dmg">Damage</span>
