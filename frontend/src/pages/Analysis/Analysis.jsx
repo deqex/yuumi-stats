@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components';
 
@@ -119,6 +119,220 @@ function DeepStatCard({ label, statObj, mode, format }) {
 }
 
 
+function aggregateMatches(rawMatches, selectedRoles, selectedQueues) {
+  if (!rawMatches) return null;
+
+  const allowedRoles  = selectedRoles.length < ALL_ROLES.length  ? new Set(selectedRoles)  : null;
+  const allowedQueues = new Set(selectedQueues);
+
+  const filtered = rawMatches.filter(m => {
+    if (!allowedQueues.has(m.queueId)) return false;
+    if (allowedRoles && m.queueId !== 450) {
+      if (!m.position || !allowedRoles.has(m.position)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    return { totalGames: 0, wins: 0, losses: 0, winRate: 0 };
+  }
+
+  const tracker = () => ({ total: 0, min: Infinity, max: -Infinity });
+  const update  = (t, val) => {
+    t.total += val;
+    if (val < t.min) t.min = val;
+    if (val > t.max) t.max = val;
+  };
+
+  let wins = 0;
+  const kills = tracker(), deaths = tracker(), assists = tracker();
+  const cs = tracker(), visionScore = tracker(), aiScore = tracker();
+  const kp = tracker(), gameLength = tracker();
+
+  let firstBloods = 0, forfeits = 0;
+  const uniqueChampions = new Set();
+  const championStats = new Map();
+  let epicMonsterSteals = 0, flawlessAces = 0, hadOpenNexus = 0;
+  let perfectGames = 0, takedownsInEnemyFountain = 0;
+  let elderDragonKillsWithOpposingSoul = 0, dancedWithRiftHerald = 0;
+  let minEarliestBaron = Infinity;
+
+  const healFromMap = tracker(), controlWards = tracker();
+  const dragonTakedowns = tracker(), scuttleKills = tracker();
+  const stealthWards = tracker(), wardKills = tracker();
+  const dmgToTurrets = tracker(), selfMitigated = tracker();
+  const allyJungle = tracker(), dmgToChamps = tracker();
+  const enemyJungle = tracker(), healsOnTeam = tracker();
+  const killsNearTurret = tracker(), maxCsAdv = tracker();
+  const takedownsAfterLevel = tracker(), takedownsBeforeJungle = tracker();
+  const abilityUses = tracker();
+
+  for (const m of filtered) {
+    if (m.win) wins++;
+
+    update(kills,       m.kills);
+    update(deaths,      m.deaths);
+    update(assists,     m.assists);
+    update(cs,          m.cs);
+    update(visionScore, m.visionScore);
+    update(aiScore,     m.aiScore);
+    update(kp,          m.kp);
+    update(gameLength,  m.gameDuration);
+
+    firstBloods += m.firstBlood;
+    forfeits    += m.forfeit;
+
+    if (m.championName) {
+      uniqueChampions.add(m.championName);
+      if (!championStats.has(m.championName)) {
+        championStats.set(m.championName, { games: 0, wins: 0, totalKills: 0, totalDeaths: 0, totalAssists: 0, totalCs: 0, totalGameDuration: 0, totalAiScore: 0 });
+      }
+      const cs_ = championStats.get(m.championName);
+      cs_.games++;
+      if (m.win) cs_.wins++;
+      cs_.totalKills        += m.kills;
+      cs_.totalDeaths       += m.deaths;
+      cs_.totalAssists      += m.assists;
+      cs_.totalCs           += m.cs;
+      cs_.totalGameDuration += m.gameDuration;
+      cs_.totalAiScore      += m.aiScore;
+    }
+
+    epicMonsterSteals                += m.epicMonsterSteals;
+    flawlessAces                     += m.flawlessAces;
+    hadOpenNexus                     += m.hadOpenNexus;
+    perfectGames                     += m.perfectGame;
+    takedownsInEnemyFountain         += m.takedownsInEnemyFountain;
+    elderDragonKillsWithOpposingSoul += m.elderDragonKillsWithOpposingSoul;
+    dancedWithRiftHerald             += m.dancedWithRiftHerald;
+
+    if (m.earliestBaron > 0 && m.earliestBaron < minEarliestBaron) {
+      minEarliestBaron = m.earliestBaron;
+    }
+
+    update(healFromMap,           m.healFromMapSources);
+    update(controlWards,          m.controlWardsPlaced);
+    update(dragonTakedowns,       m.dragonTakedowns);
+    update(scuttleKills,          m.scuttleCrabKills);
+    update(stealthWards,          m.stealthWardsPlaced);
+    update(wardKills,             m.wardTakedowns);
+    update(dmgToTurrets,          m.damageDealtToTurrets);
+    update(selfMitigated,         m.damageSelfMitigated);
+    update(allyJungle,            m.totalAllyJungleMinionsKilled);
+    update(dmgToChamps,           m.totalDamageDealtToChampions);
+    update(enemyJungle,           m.totalEnemyJungleMinionsKilled);
+    update(healsOnTeam,           m.totalHealsOnTeammates);
+    update(killsNearTurret,       m.killsNearEnemyTurret);
+    update(maxCsAdv,              m.maxCsAdvantageOnLaneOpponent);
+    update(takedownsAfterLevel,   m.takedownsAfterGainingLevelAdvantage);
+    update(takedownsBeforeJungle, m.takedownsBeforeJungleMinionSpawn);
+    update(abilityUses,           m.abilityUses);
+  }
+
+  const n = filtered.length;
+  const stat = (t, round = false) => {
+    const avg = n > 0 ? (round ? Math.round(t.total / n) : +(t.total / n).toFixed(2)) : 0;
+    return {
+      avg,
+      total: round ? Math.round(t.total)             : +t.total.toFixed(2),
+      max:   t.max === -Infinity ? 0 : (round ? Math.round(t.max) : +t.max.toFixed(2)),
+      min:   t.min === Infinity  ? 0 : (round ? Math.round(t.min) : +t.min.toFixed(2)),
+    };
+  };
+
+  const mostPlayed = [...championStats.entries()]
+    .sort((a, b) => b[1].games - a[1].games)
+    .slice(0, 5)
+    .map(([championName, s]) => {
+      const minsPlayed = s.totalGameDuration / 60;
+      return {
+        championName,
+        games:       s.games,
+        wins:        s.wins,
+        winRate:     Math.round((s.wins / s.games) * 100),
+        avgKills:    +(s.totalKills   / s.games).toFixed(1),
+        avgDeaths:   +(s.totalDeaths  / s.games).toFixed(1),
+        avgAssists:  +(s.totalAssists / s.games).toFixed(1),
+        avgCsPerMin: minsPlayed > 0 ? +(s.totalCs / minsPlayed).toFixed(1) : 0,
+        avgAiScore:  Math.round(s.totalAiScore / s.games),
+        timePlayed:  Math.round(s.totalGameDuration),
+      };
+    });
+
+  return {
+    totalGames: n,
+    wins,
+    losses:  n - wins,
+    winRate: Math.round((wins / n) * 100),
+
+    performance: {
+      kills:       stat(kills),
+      deaths:      stat(deaths),
+      assists:     stat(assists),
+      cs:          stat(cs),
+      visionScore: stat(visionScore),
+      aiScore:     stat(aiScore, true),
+      kp:          stat(kp, true),
+      gameLength:  stat(gameLength, true),
+    },
+
+    highlights: {
+      firstBloods,
+      forfeits,
+      uniqueChampions:              uniqueChampions.size,
+      epicMonsterSteals,
+      flawlessAces,
+      hadOpenNexus,
+      perfectGames,
+      takedownsInEnemyFountain,
+      elderDragonKillsWithOpposingSoul,
+      dancedWithRiftHerald,
+      earliestBaron: minEarliestBaron === Infinity ? null : Math.round(minEarliestBaron),
+    },
+
+    mostPlayed,
+
+    deepStats: {
+      healFromMapSources:              stat(healFromMap, true),
+      controlWardsPlaced:              stat(controlWards),
+      dragonTakedowns:                 stat(dragonTakedowns),
+      scuttleCrabKills:                stat(scuttleKills),
+      stealthWardsPlaced:              stat(stealthWards),
+      wardTakedowns:                   stat(wardKills),
+      damageDealtToTurrets:            stat(dmgToTurrets, true),
+      damageSelfMitigated:             stat(selfMitigated, true),
+      allyJungleMinions:               stat(allyJungle),
+      damageDealtToChampions:          stat(dmgToChamps, true),
+      enemyJungleMinions:              stat(enemyJungle),
+      healsOnTeammates:                stat(healsOnTeam, true),
+      killsNearEnemyTurret:            stat(killsNearTurret),
+      maxCsAdvantage:                  stat(maxCsAdv),
+      takedownsAfterLevelAdvantage:    stat(takedownsAfterLevel),
+      takedownsBeforeJungleMinionSpawn:stat(takedownsBeforeJungle),
+      abilityUses:                     stat(abilityUses, true),
+    },
+  };
+}
+
+
+const CLIENT_CACHE_TTL = 45 * 60 * 1000;
+
+function clientCacheKey(region, summonerName, summonerTag) {
+  return `analysis_loaded:${region}:${summonerName}-${summonerTag}`;
+}
+
+function isClientCacheValid(region, summonerName, summonerTag) {
+  try {
+    const ts = localStorage.getItem(clientCacheKey(region, summonerName, summonerTag));
+    return !!ts && (Date.now() - Number(ts)) < CLIENT_CACHE_TTL;
+  } catch { return false; }
+}
+
+function markClientCache(region, summonerName, summonerTag) {
+  try { localStorage.setItem(clientCacheKey(region, summonerName, summonerTag), Date.now()); } catch {}
+}
+
+
 export default function Analysis() {
   const params = useParams();
   const navigate = useNavigate();
@@ -127,61 +341,54 @@ export default function Analysis() {
   const summonerTag  = params?.nameTag?.split('-').slice(1).join('-') || '';
   const region = params?.region || 'euw1';
 
-  const [data, setData]           = useState(null);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState('');
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [viewMode, setViewMode]   = useState('avg');
+  const [autoLoad] = useState(() => isClientCacheValid(region, summonerName, summonerTag));
+
+  const [rawMatches, setRawMatches] = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState('');
+  const [hasLoaded, setHasLoaded]   = useState(false);
+  const [viewMode, setViewMode]     = useState('avg');
 
   const [selectedRoles,  setSelectedRoles]  = useState(ALL_ROLES);
   const [selectedQueues, setSelectedQueues] = useState(ALL_QUEUES.filter(q => q !== 450));
   const [selectedDays,   setSelectedDays]   = useState(14);
 
-  const [dirty, setDirty] = useState(false);
+  const [daysDirty, setDaysDirty] = useState(false);
+
+  const data = useMemo(
+    () => aggregateMatches(rawMatches, selectedRoles, selectedQueues),
+    [rawMatches, selectedRoles, selectedQueues],
+  );
 
   const toggleRole = (role) => {
     setSelectedRoles(prev =>
       prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
     );
-    if (hasLoaded) setDirty(true);
   };
 
   const toggleQueue = (queue) => {
     setSelectedQueues(prev =>
       prev.includes(queue) ? prev.filter(q => q !== queue) : [...prev, queue]
     );
-    if (hasLoaded) setDirty(true);
   };
 
-  const fetchData = useCallback(async (roles, queues, days) => {
+  const fetchData = useCallback(async (days) => {
     if (!summonerName || !summonerTag) return;
-
-    if (roles.length === 0 || queues.length === 0) {
-      setData({ totalGames: 0, wins: 0, losses: 0, winRate: 0 });
-      setHasLoaded(true);
-      return;
-    }
 
     setLoading(true);
     setError('');
     try {
       const qs = new URLSearchParams({ summonerName, summonerTag, region, days });
-
-      if (roles.length < ALL_ROLES.length) {
-        qs.append('roles', roles.join(','));
-      }
-      if (queues.length < ALL_QUEUES.length) {
-        qs.append('queues', queues.join(','));
-      }
-
       const res = await fetch(`/api/matches/analysis?${qs}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Request failed (${res.status})`);
       }
-      setData(await res.json());
+      const json = await res.json();
+      setRawMatches(json.matches);
       setHasLoaded(true);
-      setDirty(false);
+      setDaysDirty(false);
+      markClientCache(region, summonerName, summonerTag);
     } catch (err) {
       setError(err.message || 'Failed to load analysis data.');
     } finally {
@@ -189,9 +396,13 @@ export default function Analysis() {
     }
   }, [summonerName, summonerTag, region]);
 
+  useEffect(() => {
+    if (autoLoad) fetchData(selectedDays);
+  }, []);
+
   const handleLoad = () => {
     if (loading) return;
-    fetchData(selectedRoles, selectedQueues, selectedDays);
+    fetchData(selectedDays);
   };
 
   const p = data?.performance;
@@ -232,13 +443,10 @@ export default function Analysis() {
           </div>
         )}
 
-        {!hasLoaded && !loading && (
+        {!hasLoaded && !loading && !autoLoad && (
           <div className="analysis-load-area">
             <div className="analysis-load-icon">📊</div>
             <p className="analysis-load-title">Player Analysis</p>
-            <p className="analysis-load-subtitle">
-              Load stats from the last 14 days across all game modes. This may take a moment.
-            </p>
             <button className="analysis-load-btn" onClick={handleLoad}>
               Load Analysis
             </button>
@@ -324,7 +532,7 @@ export default function Analysis() {
                   value={selectedDays}
                   onChange={e => {
                     setSelectedDays(Number(e.target.value));
-                    if (hasLoaded) setDirty(true);
+                    if (hasLoaded) setDaysDirty(true);
                   }}
                 >
                   {TIME_PERIODS.map(t => (
@@ -349,7 +557,7 @@ export default function Analysis() {
               </div>
             </div>
 
-            {dirty && !loading && (
+            {daysDirty && !loading && (
               <div className="analysis-refetch-bar">
                 <button className="analysis-update-btn" onClick={handleLoad}>
                   Update
