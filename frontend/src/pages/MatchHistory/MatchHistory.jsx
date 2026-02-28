@@ -126,7 +126,7 @@ export default function MatchHistory() {
       setMatches(prev => [...prev, ...newMatchData]);
       const newOffset = currentOffset + newMatchIds.length;
       setMatchOffset(newOffset);
-      if (newOffset >= 100 || newMatchIds.length < 20) {
+      if (newMatchIds.length < 20) {
         setHasMore(false);
       }
     } catch (error) {

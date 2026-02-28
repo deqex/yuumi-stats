@@ -5,114 +5,21 @@ import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
 import { genBadges } from "../utils/genBadges.js";
 import { genScore } from "../utils/genScore.js";
+import { saveMatchToDb } from "../utils/saveMatch.js";
 
+const aggregatedCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-async function saveMatchToDb(matchData, region) {
-    try {
-        const { metadata, info } = matchData;
-        if (!metadata?.matchId || !info?.participants) return;
-
-        const exists = await Match.exists({ matchId: metadata.matchId });
-        if (exists) return;
-
-        const season = new Date(info.gameCreation).getFullYear() - 2010;
-
-        const participantSummaries = info.participants.map((p) => ({
-            puuid: p.puuid,
-            riotIdGameName: p.riotIdGameName ?? '',
-            riotIdTagline: p.riotIdTagline ?? '',
-            championId: p.championId,
-            championName: p.championName,
-            teamId: p.teamId,
-            individualPosition: p.individualPosition ?? '',
-            roleQuestId: p.roleBoundItem,
-            win: p.win,
-            kills: p.kills,
-            deaths: p.deaths,
-            assists: p.assists,
-            totalMinionsKilled: p.totalMinionsKilled ?? 0,
-            neutralMinionsKilled: p.neutralMinionsKilled ?? 0,
-            champExperience: p.champExperience ?? 0,
-            champLevel: p.champLevel ?? 1,
-            goldEarned: p.goldEarned ?? 0,
-            totalDamageDealtToChampions: p.totalDamageDealtToChampions ?? 0,
-            totalDamageShieldedOnTeammates: p.totalDamageShieldedOnTeammates ?? 0,
-            totalHealsOnTeammates: p.totalHealsOnTeammates ?? 0,
-            totalDamageTaken: p.totalDamageTaken ?? 0,
-            damageSelfMitigated: p.damageSelfMitigated ?? 0,
-            timeCCingOthers: p.timeCCingOthers ?? 0,
-            timePlayed: p.timePlayed ?? 0,
-            visionScore: p.visionScore ?? 0,
-            enemyMissingPings: p.enemyMissingPings ?? 0,
-            enemyVisionPings: p.enemyVisionPings ?? 0,
-            firstTowerKill: p.firstTowerKill ?? false,
-            firstBloodKill: p.firstBloodKill ?? false,
-            firstBloodAssist: p.firstBloodAssist ?? false,
-            largestMultiKill: p.largestMultiKill ?? 0,
-            objectivesStolen: p.objectivesStolen ?? 0,
-            // additional stats
-            controlWardsPlaced: p.challenges?.controlWardsPlaced ?? 0,
-            damageDealtToTurrets: p.damageDealtToTurrets ?? 0,
-            totalAllyJungleMinionsKilled: p.totalAllyJungleMinionsKilled ?? 0,
-            totalEnemyJungleMinionsKilled: p.totalEnemyJungleMinionsKilled ?? 0,
-            gameEndedInSurrender: p.gameEndedInSurrender ?? false,
-            gameEndedInEarlySurrender: p.gameEndedInEarlySurrender ?? false,
-            // challenges
-            epicMonsterSteals: p.challenges?.epicMonsterSteals ?? 0,
-            flawlessAces: p.challenges?.flawlessAces ?? 0,
-            hadOpenNexus: p.challenges?.hadOpenNexus ?? 0,
-            perfectGame: p.challenges?.perfectGame ?? 0,
-            takedownsInEnemyFountain: p.challenges?.takedownsInEnemyFountain ?? 0,
-            earliestBaron: p.challenges?.earliestBaron ?? 0,
-            elderDragonKillsWithOpposingSoul: p.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
-            dancedWithRiftHerald: p.challenges?.dancedWithRiftHerald ?? 0,
-            healFromMapSources: p.challenges?.HealFromMapSources ?? 0,
-            dragonTakedowns: p.challenges?.dragonTakedowns ?? 0,
-            scuttleCrabKills: p.challenges?.scuttleCrabKills ?? 0,
-            stealthWardsPlaced: p.challenges?.stealthWardsPlaced ?? 0,
-            wardTakedowns: p.challenges?.wardTakedowns ?? 0,
-            killsNearEnemyTurret: p.challenges?.killsNearEnemyTurret ?? 0,
-            maxCsAdvantageOnLaneOpponent: p.challenges?.maxCsAdvantageOnLaneOpponent ?? 0,
-            takedownsAfterGainingLevelAdvantage: p.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
-            takedownsBeforeJungleMinionSpawn: p.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
-            abilityUses: p.challenges?.abilityUses ?? 0,
-            killParticipation: p.challenges?.killParticipation ?? 0,
-            kda: p.challenges?.kda ?? 0,
-            item0: p.item0 ?? 0,
-            item1: p.item1 ?? 0,
-            item2: p.item2 ?? 0,
-            item3: p.item3 ?? 0,
-            item4: p.item4 ?? 0,
-            item5: p.item5 ?? 0,
-            item6: p.item6 ?? 0,
-            summoner1Id: p.summoner1Id ?? 0,
-            summoner2Id: p.summoner2Id ?? 0,
-            perks: p.perks ?? null,
-        }));
-
-        const regionCode = (region || info.platformId || "").toUpperCase();
-
-        await Match.create({
-            matchId: metadata.matchId,
-            region: regionCode,
-            gameCreation: new Date(info.gameCreation),
-            gameDuration: info.gameDuration,
-            queueId: info.queueId,
-            season,
-            participantSummaries,
-        });
-
-        console.log(`Saved match ${metadata.matchId} to DB`);
-    } catch (err) {
-        if (err.code !== 11000) {
-            console.error("Error saving match to DB:", err.message);
-        }
-    }
+function getCacheEntry(key) {
+    const entry = aggregatedCache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) { aggregatedCache.delete(key); return null; }
+    return entry.data;
 }
 
-
-
-
+function setCacheEntry(key, data) {
+    aggregatedCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 
 
 
@@ -230,14 +137,14 @@ export async function getParticipantStats(req, res) {
         const [rankRes, summonerRes, matchIdsRes] = await Promise.all([
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`),
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`),
-            riotFetch(`https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&start=0&count=7&api_key=${apiKey}`),
+            riotFetch(`https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20&api_key=${apiKey}`),
         ]);
 
         const ranks     = rankRes.ok     ? await rankRes.json()     : [];
         const summoner  = summonerRes.ok ? await summonerRes.json() : {};
         const matchIds  = matchIdsRes.ok ? await matchIdsRes.json() : [];
 
-        // Calculate stats from last 7 ranked games
+        // Calculate stats from last 20 games (all modes)
         let totalKills = 0, totalDeaths = 0, totalAssists = 0;
         let totalCS = 0, totalDurationSecs = 0, totalKP = 0;
         let wins = 0, validGames = 0;
@@ -376,7 +283,7 @@ export async function getRankEntries(req, res) {
     }
 }
 
-export async function getAnalysisData(req, res) {
+export async function getAggregatedStats(req, res) {
     try {
         const { summonerName, summonerTag, region, roles: rolesParam, queues: queuesParam } = req.query;
         if (!summonerName || !summonerTag || !region) {
@@ -391,15 +298,15 @@ export async function getAnalysisData(req, res) {
         const broadRegion = getBroadRegion(region);
         const apiKey = getApiKey();
 
+        const cacheKey = `${puuid}:${rolesParam || ''}:${queuesParam || ''}`;
+        const cached = getCacheEntry(cacheKey);
+        if (cached) {
+            console.log(`[AggregatedStats] cache HIT ${summonerName}#${summonerTag}`);
+            return res.json(cached);
+        }
+
         const now       = Math.floor(Date.now() / 1000);
         const startTime = now - 14 * 24 * 60 * 60;
-
-        const matchIdsRes = await riotFetch(
-            `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?startTime=${startTime}&endTime=${now}&count=100&api_key=${apiKey}`
-        );
-        if (!matchIdsRes.ok) throw new Error(`Riot API error (analysis matchIds): ${matchIdsRes.status}`);
-        const matchIds = await matchIdsRes.json();
-        console.log(`[API] analysis: ${matchIds.length} match IDs fetched for ${summonerName}#${summonerTag} | roles=${rolesParam || 'all'} queues=${queuesParam || 'all'}`);
 
         // Helper to create a stat tracker { total, min, max }
         const tracker = () => ({ total: 0, min: Infinity, max: -Infinity });
@@ -436,15 +343,32 @@ export async function getAnalysisData(req, res) {
         const takedownsAfterLevel = tracker(), takedownsBeforeJungle = tracker();
         const abilityUses = tracker();
 
-        for (const matchId of matchIds) {
+        let idStart = 0;
+        let totalIdsFetched = 0;
+        let keepFetching = true;
+
+        while (keepFetching) {
+            const matchIdsRes = await riotFetch(
+                `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${idStart}&count=10&api_key=${apiKey}`
+            );
+            if (!matchIdsRes.ok) throw new Error(`Riot API error (analysis matchIds): ${matchIdsRes.status}`);
+            const batch = await matchIdsRes.json();
+
+            if (batch.length === 0) break;
+            totalIdsFetched += batch.length;
+            console.log(`[API] analysis: ${batch.length} match IDs fetched (start=${idStart}) for ${summonerName}#${summonerTag} | roles=${rolesParam || 'all'} queues=${queuesParam || 'all'}`);
+
+        for (const matchId of batch) {
             let p = null;
             let allParticipants = null;
             let gameDuration = 0;
             let queueId = null;
+            let gameCreationSec = 0;
 
             const cached = await Match.findOne({ matchId }).lean();
             if (cached) {
                 console.log(`[DB] analysis ${matchId}`);
+                gameCreationSec = new Date(cached.gameCreation).getTime() / 1000;
                 queueId = cached.queueId;
                 if (allowedQueues && !allowedQueues.has(queueId)) continue;
                 p = cached.participantSummaries.find(ps => ps.puuid === puuid);
@@ -458,6 +382,7 @@ export async function getAnalysisData(req, res) {
                 if (!matchRes.ok) continue;
                 const matchData = await matchRes.json();
                 saveMatchToDb(matchData, region);
+                gameCreationSec = (matchData.info?.gameCreation || 0) / 1000;
                 queueId = matchData.info?.queueId;
                 if (allowedQueues && !allowedQueues.has(queueId)) continue;
                 allParticipants = matchData.info?.participants || [];
@@ -488,6 +413,12 @@ export async function getAnalysisData(req, res) {
                         abilityUses: rawP.challenges?.abilityUses ?? 0,
                     };
                 }
+            }
+
+            if (gameCreationSec < startTime) {
+                console.log(`[Analysis] reached time limit at ${matchId} - stopping`);
+                keepFetching = false;
+                break;
             }
 
             if (!p) continue;
@@ -567,8 +498,12 @@ export async function getAnalysisData(req, res) {
             update(abilityUses,           p.abilityUses || 0);
         }
 
+            if (batch.length < 10) break;
+            idStart += 10;
+        }
+
         const n = totalGames;
-        console.log(`[Analysis] complete — ${n}/${matchIds.length} games counted for ${summonerName}#${summonerTag}`);
+        console.log(`[Analysis] complete — ${n}/${totalIdsFetched} IDs fetched for ${summonerName}#${summonerTag}`);
 
         // Build a stat object with avg, total, max, min
         const stat = (t, round = false) => {
@@ -581,7 +516,7 @@ export async function getAnalysisData(req, res) {
             };
         };
 
-        return res.json({
+        const result = {
             totalGames: n,
             wins,
             losses: n - wins,
@@ -628,9 +563,12 @@ export async function getAnalysisData(req, res) {
                 takedownsBeforeJungleMinionSpawn: stat(takedownsBeforeJungle),
                 abilityUses:                  stat(abilityUses, true),
             },
-        });
+        };
+
+        setCacheEntry(cacheKey, result);
+        return res.json(result);
     } catch (error) {
-        console.error("getAnalysisData error:", error);
+        console.error("[AggregatedStats] error:", error);
         const status = error.statusCode || 500;
         return res.status(status).json({ error: error.message });
     }
