@@ -15,7 +15,7 @@ export default function SearchBar({
 
   return (
     <div className="search-container">
-      <div style={{ display: 'flex', gap: '10px', flex: 1, paddingLeft: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, paddingLeft: '20px' }}>
         <input
           type="text"
           placeholder="Summoner Name"
@@ -23,16 +23,17 @@ export default function SearchBar({
           value={summonerName}
           onChange={(e) => setSummonerName(e.target.value)}
           onKeyPress={handleKeyPress}
-          style={{ maxWidth: '200px' }}
+          style={{ flex: 1 }}
         />
+        <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#b39ddb', lineHeight: 1, userSelect: 'none', flexShrink: 0 }}>#</span>
         <input
           type="text"
-          placeholder="Tagline"
+          placeholder="TAG"
           className="search-input"
           value={summonerTag}
           onChange={(e) => setSummonerTag(e.target.value)}
           onKeyPress={handleKeyPress}
-          style={{ maxWidth: '100px' }}
+          style={{ width: '40px', flexShrink: 0 }}
         />
       </div>
       <button

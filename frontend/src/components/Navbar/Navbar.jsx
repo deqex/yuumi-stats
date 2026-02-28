@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import catLogo from '../../assets/img/cat.png';
 
 export default function Navbar() {
   const location = useLocation();
@@ -8,12 +9,17 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-logo">
+        <img src={catLogo} alt="logo" style={{ height: '52px', borderRadius: '6px' }} />
         <span>Yuumi.gg</span>
       </Link>
       <div className="navbar-nav">
-        <span className={`navbar-item ${!isLeaderboard ? 'active' : ''}`}>
+        <Link
+          to="/"
+          className={`navbar-item ${!isLeaderboard ? 'active' : ''}`}
+          style={{ textDecoration: 'none' }}
+        >
           Player search
-        </span>
+        </Link>
         <span className="navbar-item">Groups</span>
         <Link
           to="/leaderboard"

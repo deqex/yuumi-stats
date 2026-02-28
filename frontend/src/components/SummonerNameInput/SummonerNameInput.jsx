@@ -16,6 +16,7 @@ export default function SummonerNameInput({
         onChange={(e) => setSummonerName(e.target.value)}
         placeholder="Summoner Name"
       />
+      <span>#</span>
       <input
         type="text"
         value={summonerTag}

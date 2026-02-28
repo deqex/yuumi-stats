@@ -219,30 +219,74 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
       <div className="lg-card-stats">
         {loading ? (
           <>
-            <div className="lg-stat-skeleton" style={{ width: '70%' }} />
-            <div className="lg-stat-skeleton" style={{ width: '55%' }} />
-            <div className="lg-stat-skeleton" style={{ width: '60%' }} />
-            <div className="lg-stat-skeleton" style={{ width: '50%' }} />
-            <div className="lg-stat-skeleton" style={{ width: '45%' }} />
-            <div className="lg-stat-skeleton" style={{ width: '65%' }} />
+            <div className="lg-stat-skeleton" style={{ width: '72%', margin: '2px auto' }} />
+            <div className="lg-stat-skeleton" style={{ width: '42%', margin: '2px auto 5px' }} />
+            <div className="lg-stat-grid">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="lg-stat-cell">
+                  <div className="lg-stat-skeleton" style={{ width: '70%', height: '7px' }} />
+                  <div className="lg-stat-skeleton" style={{ width: '55%', height: '10px', marginTop: '3px' }} />
+                </div>
+              ))}
+            </div>
           </>
         ) : s ? (
           <>
-            <div className="lg-stat-main">{s.avgKills} / {s.avgDeaths} / {s.avgAssists}</div>
-            <div className="lg-stat-sub">({s.kda} KDA)</div>
-            <div className="lg-stat-sub">{s.winRate}% Winrate</div>
-            <div className="lg-stat-sub">{s.csPerMin} cs/min</div>
-            <div className="lg-stat-sub">{s.avgKP}% KP</div>
-            <div className="lg-stat-sub">Avg AI Score —</div>
+            <div className="lg-stat-kda-row">
+              <span className="lg-kda-val">{s.avgKills}</span>
+              <span className="lg-kda-sep">/</span>
+              <span className="lg-kda-val lg-kda-d">{s.avgDeaths}</span>
+              <span className="lg-kda-sep">/</span>
+              <span className="lg-kda-val">{s.avgAssists}</span>
+            </div>
+            <div className="lg-kda-ratio">{s.kda} KDA</div>
+            <div className="lg-stat-grid">
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">WR</span>
+                <span className="lg-stat-val">{s.winRate}%</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">CS/MIN</span>
+                <span className="lg-stat-val">{s.csPerMin}</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">KP</span>
+                <span className="lg-stat-val">{s.avgKP}%</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">AI SCR</span>
+                <span className="lg-stat-val">{s.avgAiScore}</span>
+              </div>
+            </div>
           </>
         ) : (
           <>
-            <div className="lg-stat-main">— / — / —</div>
-            <div className="lg-stat-sub">(— KDA)</div>
-            <div className="lg-stat-sub">—% Winrate</div>
-            <div className="lg-stat-sub">— cs/min</div>
-            <div className="lg-stat-sub">—% KP</div>
-            <div className="lg-stat-sub">Avg AI Score —</div>
+            <div className="lg-stat-kda-row">
+              <span className="lg-kda-val">—</span>
+              <span className="lg-kda-sep">/</span>
+              <span className="lg-kda-val lg-kda-d">—</span>
+              <span className="lg-kda-sep">/</span>
+              <span className="lg-kda-val">—</span>
+            </div>
+            <div className="lg-kda-ratio">— KDA</div>
+            <div className="lg-stat-grid">
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">WR</span>
+                <span className="lg-stat-val">—</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">CS/MIN</span>
+                <span className="lg-stat-val">—</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">KP</span>
+                <span className="lg-stat-val">—</span>
+              </div>
+              <div className="lg-stat-cell">
+                <span className="lg-stat-lbl">AI SCR</span>
+                <span className="lg-stat-val">—</span>
+              </div>
+            </div>
           </>
         )}
       </div>

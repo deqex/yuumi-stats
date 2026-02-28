@@ -137,28 +137,28 @@ export async function getParticipantStats(req, res) {
         const [rankRes, summonerRes, matchIdsRes] = await Promise.all([
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`),
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`),
-            riotFetch(`https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20&api_key=${apiKey}`),
+            riotFetch(`https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=7&api_key=${apiKey}`),
         ]);
 
         const ranks     = rankRes.ok     ? await rankRes.json()     : [];
         const summoner  = summonerRes.ok ? await summonerRes.json() : {};
         const matchIds  = matchIdsRes.ok ? await matchIdsRes.json() : [];
-
-        // Calculate stats from last 20 games (all modes)
         let totalKills = 0, totalDeaths = 0, totalAssists = 0;
-        let totalCS = 0, totalDurationSecs = 0, totalKP = 0;
+        let totalCS = 0, totalDurationSecs = 0, totalKP = 0, totalAiScore = 0;
         let wins = 0, validGames = 0;
         const recentGames = [];
 
         for (const matchId of matchIds) {
             let participants = null;
             let gameDuration = 0;
+            let queueId = 0;
 
             // Check DB cache first
             const cached = await Match.findOne({ matchId }).lean();
             if (cached) {
                 participants = cached.participantSummaries;
                 gameDuration = cached.gameDuration;
+                queueId      = cached.queueId;
             } else {
                 const matchRes = await riotFetch(
                     `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`
@@ -168,6 +168,7 @@ export async function getParticipantStats(req, res) {
                 saveMatchToDb(matchData, region);
                 participants = matchData.info?.participants || [];
                 gameDuration = matchData.info?.gameDuration || 0;
+                queueId      = matchData.info?.queueId || 0;
             }
 
             const p = participants.find(pl => pl.puuid === puuid);
@@ -184,6 +185,7 @@ export async function getParticipantStats(req, res) {
             totalCS           += (p.totalMinionsKilled || 0) + (p.neutralMinionsKilled || 0);
             totalDurationSecs += gameDuration;
             totalKP           += teamKills > 0 ? (p.kills + p.assists) / teamKills : 0;
+            totalAiScore      += genScore(p, participants, gameDuration, queueId).score;
             if (p.win) wins++;
 
             recentGames.push({ championId: p.championId, win: p.win });
@@ -201,6 +203,7 @@ export async function getParticipantStats(req, res) {
                 ? +(totalCS / (totalDurationSecs / 60)).toFixed(1)
                 : 0,
             avgKP:       Math.round((totalKP / validGames) * 100),
+            avgAiScore:  Math.round(totalAiScore / validGames),
             gamesPlayed: validGames,
         } : null;
 

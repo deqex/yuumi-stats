@@ -250,11 +250,59 @@
 }
 
 .lg-card-stats {
-  padding: 0 9px 7px;
-  text-align: center;
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
-.lg-stat-main { font-size: 11px; color: #374151; line-height: 1.6; }
-.lg-stat-sub  { font-size: 10px; color: #6B7280;  line-height: 1.5; }
+
+.lg-stat-kda-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.lg-kda-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+}
+.lg-kda-d   { color: #f87171; }
+.lg-kda-sep { font-size: 10px; color: #C4C4D4; }
+
+.lg-kda-ratio {
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-bottom: 4px;
+}
+
+.lg-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  width: 100%;
+}
+.lg-stat-cell {
+  background: #f3f4f6;
+  border-radius: 5px;
+  padding: 3px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.lg-stat-lbl {
+  font-size: 8px;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.lg-stat-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+}
 
 .lg-stat-skeleton {
   height: 9px;

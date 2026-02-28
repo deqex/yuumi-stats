@@ -20,7 +20,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48px;
+  padding: 0 48px 0 20px;
   box-sizing: border-box;
   box-shadow: 0 4px 16px 0 rgba(139, 92, 246, 0.1);
   position: sticky;
@@ -80,14 +80,25 @@ body {
   margin-bottom: 10px;
 }
 
+.hero-banner-image {
+  width: 120px;
+  display: block;
+  margin-bottom: 2px;
+  border-radius: 8px;
+}
+
 .title {
-  color: #8B5CF6;
-  font-size: 64px;
+  font-size: 72px;
   font-weight: 700;
   margin: 0;
   margin-bottom: 18px;
   letter-spacing: 1px;
-  text-shadow: 0 4px 24px #B9A4F4;
+  background: linear-gradient(90deg, #A78BFA 0%, #9F7AEA 50%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 24px #B9A4F4);
 }
 
 .search-container {
