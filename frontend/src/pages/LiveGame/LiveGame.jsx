@@ -440,6 +440,7 @@ export default function LiveGame() {
               <span className="lg-info-sep">|</span>
               <span>Match started {minutesElapsed} minute{minutesElapsed !== 1 ? 's' : ''} ago</span>
             </div>
+            <div className="lg-stats-note">Showing stats for last 7 Ranked Solo/Duo games</div>
 
             <div className="lg-team-section">
               <div className="lg-team-header">
