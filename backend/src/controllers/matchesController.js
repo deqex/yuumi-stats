@@ -1,5 +1,6 @@
 import { getBroadRegion } from "../utils/getBroadRegion.js";
 import Match from "../models/Match.js";
+import Profile from "../models/Profile.js";
 import { getCachedPuuid } from "../utils/getPuuid.js";
 import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
@@ -283,6 +284,30 @@ export async function getRankEntries(req, res) {
         console.error("getRankEntries error:", error);
         const status = error.statusCode || 500;
         return res.status(status).json({ error: error.message });
+    }
+}
+
+export async function getRankByPuuid(req, res) {
+    try {
+        const { puuid, region } = req.query;
+        if (!puuid || !region) {
+            return res.status(400).json({ error: "puuid and region are required" });
+        }
+
+        // Check DB cache first
+        const profile = await Profile.findOne({ puuid }, { ranks: 1 }).lean();
+        if (profile?.ranks?.length) {
+            return res.json(profile.ranks);
+        }
+
+        // Fall back to Riot API
+        const apiKey = getApiKey();
+        const rankRes = await riotFetch(`https://${region.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`);
+        const ranks = rankRes.ok ? await rankRes.json() : [];
+        return res.json(ranks);
+    } catch (error) {
+        console.error("getRankByPuuid error:", error);
+        return res.json([]);
     }
 }
 

@@ -74,7 +74,7 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
-  flex: 0 0 180px;
+  flex: 0 0 220px;
   min-width: 0;
 }
 
@@ -99,11 +99,11 @@
 }
 
 .md-header-col-score { width: 80px; }
-.md-header-col-kda   { width: 90px; }
+.md-header-col-kda   { width: 90px; margin-left: auto; }
 .md-header-col-dmg   { width: 100px; }
 .md-header-col-cs    { width: 70px; }
 .md-header-col-kp    { width: 50px; }
-.md-header-col-items { margin-left: auto; }
+.md-header-col-items { margin-left: auto; width: 201px; }
 
 /* ── Player Row ── */
 .md-player-row {
@@ -147,8 +147,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 0 0 180px;
-  max-width: 180px;
+  flex: 0 0 220px;
+  max-width: 220px;
   min-width: 0;
 }
 
@@ -246,7 +246,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 80px;
+  max-width: 100%;
 }
 
 .md-name-focus {
@@ -254,10 +254,11 @@
   font-weight: 700;
 }
 
-.md-player-tag {
-  color: #4b5563;
+.md-player-rank {
+  color: #6b7280;
   font-size: 10px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 
@@ -343,6 +344,7 @@
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .md-kda-numbers {
@@ -462,7 +464,6 @@
   gap: 3px;
   flex-shrink: 0;
   margin-left: auto;
-  justify-content: flex-end;
 }
 
 .md-item-slot {
@@ -498,61 +499,74 @@
 
 /* ── Responsive ── */
 
-
-/* Hide Score + CS early */
-@media (max-width: 1400px) {
-  .md-score-cell,
-  .md-header-col-score,
-  .md-cs-cell,
-  .md-header-col-cs {
-    display: none;
-  }
-}
-
-/* Hide KP */
-@media (max-width: 1100px) {
+/* 1) Hide KP first */
+@media (max-width: 1150px) {
   .md-kp-cell,
   .md-header-col-kp {
     display: none;
   }
 }
 
-/* Sidebar visible down to 901px. Shrink champion to icon only well before that. */
-@media (max-width: 950px) {
-  .md-spells-runes,
-  .md-player-info {
-    display: none;
-  }
-
+/* Bridge gap — start compressing champion cell (name truncates via ellipsis) */
+@media (max-width: 1020px) {
   .md-champion-cell,
   .md-team-title {
-    flex: 0 0 40px;
-    max-width: 40px;
+    flex: 0 0 190px;
+    max-width: 190px;
   }
 }
 
-/* Hide champion column and damage */
-@media (max-width: 700px) {
-  .md-champion-cell,
-  .md-team-title {
+/* 2) Hide CS */
+@media (max-width: 950px) {
+  .md-cs-cell,
+  .md-header-col-cs {
     display: none;
   }
 
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 175px;
+    max-width: 175px;
+  }
+}
+
+/* 3) Hide AI Score + further name truncation */
+@media (max-width: 850px) {
+  .md-score-cell,
+  .md-header-col-score {
+    display: none;
+  }
+
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 155px;
+    max-width: 155px;
+  }
+}
+
+/* 4) Hide damage + spells/runes — names stay visible */
+@media (max-width: 680px) {
   .md-damage-cell,
   .md-header-col-dmg {
     display: none;
   }
 
-  .md-item-trinket {
+  .md-spells-runes {
     display: none;
+  }
+
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 130px;
+    max-width: 130px;
   }
 }
 
-/* Compact items */
-@media (max-width: 500px) {
-  .md-kda-cell,
-  .md-header-col-kda {
-    width: 80px;
+/* 5) Compact items, hide trinket + quest */
+@media (max-width: 480px) {
+  .md-item-trinket,
+  .md-item-quest {
+    display: none;
   }
 
   .md-item-slot {
@@ -560,21 +574,32 @@
     height: 20px;
   }
 
-  .md-item-quest {
-    display: none;
+  .md-kda-cell,
+  .md-header-col-kda {
+    width: 80px;
   }
 
   .md-player-row {
-    padding: 6px 10px;
+    padding: 6px 8px;
   }
 
   .md-team-header {
-    padding: 8px 10px;
+    padding: 8px 8px;
+  }
+
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 110px;
+    max-width: 110px;
   }
 }
 
-/* Tightest phones */
+/* 6) Hide rank, shrink further */
 @media (max-width: 380px) {
+  .md-player-rank {
+    display: none;
+  }
+
   .md-kda-cell,
   .md-header-col-kda {
     width: 70px;
@@ -583,5 +608,11 @@
   .md-item-slot {
     width: 16px;
     height: 16px;
+  }
+
+  .md-champion-cell,
+  .md-team-title {
+    flex: 0 0 90px;
+    max-width: 90px;
   }
 }

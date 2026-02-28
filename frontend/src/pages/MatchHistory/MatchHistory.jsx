@@ -772,7 +772,7 @@ export default function MatchHistory() {
         )}
       </div>
       {isExpanded && (
-        <MatchDetail match={match} focusName={summonerName} />
+        <MatchDetail match={match} focusName={summonerName} region={region} />
       )}
       </div>
     );

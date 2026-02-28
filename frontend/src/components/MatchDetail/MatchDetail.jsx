@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './MatchDetail.css';
+import { getRankByPuuid } from '../../utils/getRankByPuuid';
+import { getRankColor } from '../../utils/getRankColor';
 
 import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
 import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
@@ -56,7 +58,41 @@ const RUNE_TREE_ICONS = {
   8400: ResolveTreeIcon,
 };
 
-export default function MatchDetail({ match, focusName }) {
+const ROMAN_TO_NUM = { I: '1', II: '2', III: '3', IV: '4' };
+
+function titleCase(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+function formatSoloRank(ranks) {
+  const solo = Array.isArray(ranks) ? ranks.find(r => r.queueType === 'RANKED_SOLO_5x5') : null;
+  if (!solo?.tier) return '-';
+  const div = ROMAN_TO_NUM[solo.rank] || solo.rank;
+  return div ? `${titleCase(solo.tier)} ${div}` : titleCase(solo.tier);
+}
+
+export default function MatchDetail({ match, focusName, region }) {
+  const [rankMap, setRankMap] = useState({});
+
+  useEffect(() => {
+    if (!match?.players || !region) return;
+    const players = Object.values(match.players);
+    Promise.all(
+      players.map(async (p) => {
+        if (!p?.puuid) return null;
+        const ranks = await getRankByPuuid(p.puuid, region);
+        return { puuid: p.puuid, ranks };
+      })
+    ).then(results => {
+      const map = {};
+      for (const r of results) {
+        if (r) map[r.puuid] = r.ranks;
+      }
+      setRankMap(map);
+    });
+  }, [match, region]);
+
   if (!match || !match.players) return null;
 
   const players = Object.values(match.players);
@@ -228,33 +264,19 @@ export default function MatchDetail({ match, focusName }) {
             <span className={`md-player-name ${isFocus ? 'md-name-focus' : ''}`}>
               {p.name || 'Unknown'}
             </span>
-            <span className="md-player-tag">
-              #{p.riotIdTagline || '???'}
-            </span>
+            {(() => {
+              const rankStr = formatSoloRank(rankMap[p.puuid]);
+              const tier = rankStr?.split(' ')[0];
+              return (
+                <span
+                  className="md-player-rank"
+                  style={{ color: rankMap[p.puuid] !== undefined ? getRankColor(tier) : '#4b5563' }}
+                >
+                  {rankMap[p.puuid] !== undefined ? rankStr : '…'}
+                </span>
+              );
+            })()}
           </div>
-        </div>
-
-        {/* AI Score */}
-        <div className="md-score-cell">
-          <span className={`md-score-value ${getScoreClass(score)}`}
-            style={score === '-' || isNaN(score) ? {} : score < 45 ? { color: '#F87171' } : score > 80 ? { color: '#D4AF37' } : { color: '#34D399' }}
-          >{score}</span>
-          <span className="md-score-placement">{placement}</span>
-          {p.opBreakdown && (
-            <div className="md-score-breakdown" role="tooltip" aria-hidden={false}>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">KDA</span><span className="md-breakdown-value">{p.opBreakdown.kdaScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Damage</span><span className="md-breakdown-value">{p.opBreakdown.damageScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Vision</span><span className="md-breakdown-value">{p.opBreakdown.visionScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">CS</span><span className="md-breakdown-value">{p.opBreakdown.csScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Enchanter</span><span className="md-breakdown-value">{p.opBreakdown.enchanterScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Tank</span><span className="md-breakdown-value">{p.opBreakdown.tankScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Gold</span><span className="md-breakdown-value">{p.opBreakdown.goldScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">CC</span><span className="md-breakdown-value">{p.opBreakdown.ccScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">Turret</span><span className="md-breakdown-value">{p.opBreakdown.turretScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-row"><span className="md-breakdown-label">KP</span><span className="md-breakdown-value">{p.opBreakdown.kpScore.toFixed(1)}</span></div>
-              <div className="md-breakdown-total"><span className="md-breakdown-label">Total</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.total)}</span></div>
-            </div>
-          )}
         </div>
 
         {/* KDA */}
@@ -282,6 +304,29 @@ export default function MatchDetail({ match, focusName }) {
               style={{ width: `${dmgWidth}%` }}
             />
           </div>
+        </div>
+
+        {/* AI Score */}
+        <div className="md-score-cell">
+          <span className={`md-score-value ${getScoreClass(score)}`}
+            style={score === '-' || isNaN(score) ? {} : score < 45 ? { color: '#F87171' } : score > 80 ? { color: '#D4AF37' } : { color: '#34D399' }}
+          >{score}</span>
+          <span className="md-score-placement">{placement}</span>
+          {p.opBreakdown && (
+            <div className="md-score-breakdown" role="tooltip" aria-hidden={false}>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">KDA</span><span className="md-breakdown-value">{p.opBreakdown.kdaScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Damage</span><span className="md-breakdown-value">{p.opBreakdown.damageScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Vision</span><span className="md-breakdown-value">{p.opBreakdown.visionScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CS</span><span className="md-breakdown-value">{p.opBreakdown.csScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Enchanter</span><span className="md-breakdown-value">{p.opBreakdown.enchanterScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Tank</span><span className="md-breakdown-value">{p.opBreakdown.tankScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Gold</span><span className="md-breakdown-value">{p.opBreakdown.goldScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">CC</span><span className="md-breakdown-value">{p.opBreakdown.ccScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">Turret</span><span className="md-breakdown-value">{p.opBreakdown.turretScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-row"><span className="md-breakdown-label">KP</span><span className="md-breakdown-value">{p.opBreakdown.kpScore.toFixed(1)}</span></div>
+              <div className="md-breakdown-total"><span className="md-breakdown-label">Total</span><span className="md-breakdown-value">{Math.round(p.opBreakdown.total)}</span></div>
+            </div>
+          )}
         </div>
 
         {/* CS */}
@@ -334,9 +379,9 @@ export default function MatchDetail({ match, focusName }) {
           <span className="md-team-label">({label})</span>
         </div>
         <div className="md-header-row">
-          <span className="md-header-col md-header-col-score">AI-Score</span>
           <span className="md-header-col md-header-col-kda">KDA</span>
           <span className="md-header-col md-header-col-dmg">Damage</span>
+          <span className="md-header-col md-header-col-score">AI-Score</span>
           <span className="md-header-col md-header-col-cs">CS</span>
           <span className="md-header-col md-header-col-kp">KP</span>
           <span className="md-header-col md-header-col-items">Items</span>

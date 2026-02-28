@@ -6,6 +6,7 @@ import {
     getPuuid,
     getSummoner,
     getRankEntries,
+    getRankByPuuid,
     getLiveGame,
     getParticipantStats,
 } from "../controllers/matchesController.js";
@@ -20,6 +21,7 @@ router.get("/queues", (req, res) => res.json(queuesData));
 router.get("/puuid", getPuuid);
 router.get("/summoner", getSummoner);
 router.get("/ranks", getRankEntries);
+router.get("/rank-by-puuid", getRankByPuuid);
 router.get("/match-ids", getMatchIds);
 router.get("/match/:matchId", getMatchData);
 router.get("/live-game", getLiveGame);
