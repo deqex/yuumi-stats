@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
-  const navItems = ['Player search', 'Groups', 'Leaderboard'];
+  const location = useLocation();
+  const isLeaderboard = location.pathname === '/leaderboard';
 
   return (
     <nav className="navbar">
@@ -10,14 +11,17 @@ export default function Navbar() {
         <span>Yuumi.gg</span>
       </Link>
       <div className="navbar-nav">
-        {navItems.map((item, idx) => (
-          <span
-            key={item}
-            className={`navbar-item ${idx === 0 ? 'active' : ''}`}
-          >
-            {item}
-          </span>
-        ))}
+        <span className={`navbar-item ${!isLeaderboard ? 'active' : ''}`}>
+          Player search
+        </span>
+        <span className="navbar-item">Groups</span>
+        <Link
+          to="/leaderboard"
+          className={`navbar-item ${isLeaderboard ? 'active' : ''}`}
+          style={{ textDecoration: 'none' }}
+        >
+          Leaderboard
+        </Link>
       </div>
     </nav>
   );

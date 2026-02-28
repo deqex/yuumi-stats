@@ -6,6 +6,7 @@ import Home from "./pages/Home/Home";
 import MatchHistory from "./pages/MatchHistory/MatchHistory";
 import LiveGame from "./pages/LiveGame/LiveGame";
 import Analysis from "./pages/Analysis/Analysis";
+import Leaderboard from "./pages/Leaderboard/Leaderboard";
 
 
 
@@ -22,6 +23,7 @@ export default function AppRoutes() {
                     <Route path="/profile/:region/:nameTag/mastery" element={<ChampionMastery></ChampionMastery>} />
                     <Route path="/profile/:region/:nameTag/livegame" element={<LiveGame></LiveGame>} />
                     <Route path="/profile/:region/:nameTag/analysis" element={<Analysis></Analysis>} />
+                    <Route path="/leaderboard" element={<Leaderboard></Leaderboard>} />
                 </Routes>
             </BrowserRouter>
         </>

@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+
+* {
+  font-family: 'Lexend', sans-serif;
+  box-sizing: border-box;
+}
+
+.lb-container {
+  min-height: 100vh;
+  width: 100vw;
+  background: #f7f5fa;
+  overflow-x: hidden;
+}
+
+.lb-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 30px 20px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.lb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lb-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lb-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.lb-tier-badge {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lb-region-select {
+  padding: 8px 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  background: white;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.lb-region-select:focus { border-color: #A78BFA; }
+
+/* ── Loading / Error ── */
+.lb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: #6B7280;
+  font-size: 14px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid #E9E4F5;
+}
+
+.lb-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #E9E4F5;
+  border-top-color: #A78BFA;
+  border-radius: 50%;
+  animation: lb-spin 0.8s linear infinite;
+}
+
+.lb-spinner-sm {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+.lb-fetching-names {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  border-radius: 10px;
+  color: #7C3AED;
+  font-size: 12px;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+
+.lb-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 16px;
+  color: #f87171;
+  font-size: 14px;
+  border: 1px solid #fecaca;
+}
+
+.lb-retry-btn {
+  padding: 8px 20px;
+  background: #A78BFA;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lb-retry-btn:hover { background: #9061f9; }
+
+/* ── Table card ── */
+.lb-table-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E9E4F5;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.lb-table-scroll {
+  overflow-x: auto;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+/* ── Header row ── */
+.lb-th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9CA3AF;
+  background: #FAFAFA;
+  border-bottom: 1px solid #F3F4F6;
+  white-space: nowrap;
+}
+
+.th-rank   { width: 52px; }
+.th-lp     { width: 76px; }
+.th-season { width: 110px; }
+.th-wr     { width: 56px; }
+.th-level  { width: 60px; }
+
+.td-level  { white-space: nowrap; color: #6B7280; font-weight: 600; }
+.th-recent { width: 110px; }
+.th-ai     { width: 80px; }
+.th-champs { width: 130px; }
+
+/* ── Rows ── */
+.lb-tr {
+  border-bottom: 1px solid #F9FAFB;
+  transition: background 0.1s;
+}
+
+.lb-tr:last-child { border-bottom: none; }
+.lb-tr:hover { background: #FAFAFA; }
+
+/* Subtle left accent for top 10 */
+.lb-tr-top10 {
+  border-left: 3px solid #A78BFA;
+}
+
+/* ── Cells ── */
+.lb-td {
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+/* Rank */
+.lb-rank {
+  font-size: 12px;
+  font-weight: 800;
+  color: #9CA3AF;
+}
+
+.rank-1 { color: #b45309; }
+.rank-2 { color: #6B7280; }
+.rank-3 { color: #c05e20; }
+
+/* Player cell */
+.td-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lb-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #E9E4F5;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.lb-row-icon-placeholder {
+  background: #F3F4F6;
+}
+
+.lb-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lb-name-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.lb-name-btn:disabled { cursor: default; }
+
+.lb-name-btn:not(:disabled):hover .lb-game-name {
+  color: #7C3AED;
+  text-decoration: underline;
+}
+
+.lb-game-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.lb-name-loading {
+  font-size: 13px;
+  font-weight: 400;
+  color: #D1D5DB;
+  font-style: italic;
+}
+
+.lb-tag-line {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9CA3AF;
+  white-space: nowrap;
+}
+
+/* Flags row */
+.lb-flags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.lb-flag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.flag-hot { background: #FEF3C7; color: #D97706; }
+.flag-new { background: #D1FAE5; color: #059669; }
+
+/* LP */
+.td-lp {
+  font-weight: 700;
+  color: #A78BFA;
+  white-space: nowrap;
+}
+
+/* W/L */
+.td-season, .td-recent {
+  white-space: nowrap;
+}
+
+.lb-stat-wins   { color: #111827; font-weight: 700; }
+.lb-stat-losses { color: #111827; font-weight: 700; }
+.lb-stat-sep    { color: #D1D5DB; }
+
+/* WR */
+.td-wr { font-weight: 700; white-space: nowrap; }
+.wr-hi { color: #22c55e; }
+.wr-lo { color: #f87171; }
+
+/* AI Score */
+.td-ai { white-space: nowrap; }
+.lb-ai-val {
+  font-weight: 700;
+  color: #A78BFA;
+}
+
+/* Champs */
+.td-champs { white-space: nowrap; }
+
+.lb-champs-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.lb-champ-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1.5px solid #E9E4F5;
+  object-fit: cover;
+}
+
+/* No data */
+.td-no-stats {
+  font-size: 11px;
+  color: #9CA3AF;
+  font-style: italic;
+}

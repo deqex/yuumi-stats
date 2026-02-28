@@ -12,7 +12,7 @@ const rankSchema = new mongoose.Schema({
 const profileSchema = new mongoose.Schema({
   summonerName: {
     type: String,
-    required: true,
+    default: '',
     index: true,
   },
   puuid: {
@@ -21,13 +21,15 @@ const profileSchema = new mongoose.Schema({
     unique: true,
     index: true,
   },
+  gameName: { type: String, default: '' },
+  tagLine:  { type: String, default: '' },
   icon: {
     type: Number,
-    required: true,
+    default: null,
   },
   summonerLevel: {
     type: Number,
-    default: 0,
+    default: null,
   },
   ranks: [rankSchema],
   lastUpdated: {
