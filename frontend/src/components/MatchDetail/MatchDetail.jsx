@@ -217,8 +217,7 @@ export default function MatchDetail({ match, focusName, region }) {
     const isBootsItem = (id) => id && BOOTS_ITEM_IDS.has(id);
 
 
-    // Use roleQuestId from DB (always present if available)
-    const questIdForRole = p.roleQuestId || 0;
+    const questIdForRole = p.roleBoundItem || p.roleQuestId || 0;
 
 
     const adcBootsItem = isADC ? (items.find(id => isBootsItem(id)) || 0) : 0;

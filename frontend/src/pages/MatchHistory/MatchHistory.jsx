@@ -7,10 +7,6 @@ import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
 import SorceryTreeIcon from '../../utils/DDragon/runes/7202_Sorcery.png';
 import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
 import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
-import QuestMid from '../../utils/DDragon/role-quests/1206.png';
-import QuestSupport from '../../utils/DDragon/role-quests/1208.png';
-import QuestJungle from '../../utils/DDragon/role-quests/1209.png';
-import QuestTop from '../../utils/DDragon/role-quests/1221.png';
 import RankIron from '../../utils/DDragon/ranks/Rank=Iron.png';
 import RankBronze from '../../utils/DDragon/ranks/Rank=Bronze.png';
 import RankSilver from '../../utils/DDragon/ranks/Rank=Silver.png';
@@ -460,46 +456,10 @@ export default function MatchHistory() {
 
     const trinketItem = focusPlayer.item6; // vision / trinket slot
 
-    // Role-quest local icons (not actually in inventory)
-    const QUEST_ICONS = {
-      1206: QuestMid,   // Mid
-      1208: QuestSupport, // Support
-      1209: QuestJungle,  // Jungle
-      1221: QuestTop,   // Top
-    };
+    const actualQuestItemId = focusPlayer.roleBoundItem || focusPlayer.roleQuestId || 0;
 
-    // Boots item IDs (ADC gets boots in the quest slot)
-    const BOOTS_ITEM_IDS = new Set([
-      1001, // Boots
-      3006, // Berserker's Greaves
-      3009, // Boots of Swiftness
-      3020, // Sorcerer's Shoes
-      3047, // Plated Steelcaps
-      3111, // Mercury's Treads
-      3117, // Mobility Boots
-      3158, // Ionian Boots of Lucidity
-    ]);
-
-    const lanePos = (focusPlayer.individualPosition || '').toUpperCase();
-    const isSupport = lanePos === 'UTILITY';
-    const isJungle = lanePos === 'JUNGLE';
-    const isTop = lanePos === 'TOP';
-    const isMid = lanePos === 'MIDDLE';
-    const isADC = lanePos === 'BOTTOM' && !isSupport;
-
-    const isBootsItem = (id) => id && BOOTS_ITEM_IDS.has(id);
-
-    // For lanes with quests, use fixed quest IDs;
-    // for ADC, show their boots item instead.
-    let questIdForRole = 0;
-    if (isJungle) questIdForRole = 1209;
-    else if (isSupport) questIdForRole = 1208;
-    else if (isTop) questIdForRole = 1221;
-    else if (isMid) questIdForRole = 1206;
-
-    const adcBootsItem = isADC ? (itemSlots.find(id => isBootsItem(id)) || 0) : 0;
-    const displayItems = isADC && adcBootsItem
-      ? itemSlots.filter(id => id !== adcBootsItem)
+    const displayItems = actualQuestItemId
+      ? itemSlots.filter(id => id !== actualQuestItemId)
       : itemSlots;
 
     // Format game duration from seconds
@@ -613,16 +573,12 @@ export default function MatchHistory() {
               {/* Quest item slot */}
               <div className="item-icon item-icon-quest" title="Role quest">
                 {(() => {
-                  const questSrc = isADC
-                    ? (adcBootsItem ? getItemIconUrl(adcBootsItem) : null)
-                    : (questIdForRole ? QUEST_ICONS[questIdForRole] : null);
+                  const questSrc = actualQuestItemId ? getItemIconUrl(actualQuestItemId) : null;
 
                   return questSrc ? (
                     <img
                       src={questSrc}
-                      alt={isADC
-                        ? (adcBootsItem ? `ADC boots ${adcBootsItem}` : 'No boots')
-                        : (questIdForRole ? `Quest ${questIdForRole}` : 'No quest')}
+                      alt={`Quest ${actualQuestItemId}`}
                       className="item-icon-img"
                     />
                   ) : null;
