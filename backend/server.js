@@ -6,6 +6,7 @@ import matchesRoutes from './src/routes/matchesRoutes.js';
 import masteryRoutes from './src/routes/masteryRoutes.js';
 import profileRoutes from './src/routes/profileRoutes.js';
 import leaderboardRoutes from './src/routes/leaderboardRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
 import dns from "node:dns/promises";
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use("/api/matches", matchesRoutes);
 app.use("/api/mastery", masteryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/auth", authRoutes);
 
 
 dns.setServers(["1.1.1.1"]);

@@ -7,6 +7,9 @@ import MatchHistory from "./pages/MatchHistory/MatchHistory";
 import LiveGame from "./pages/LiveGame/LiveGame";
 import Analysis from "./pages/Analysis/Analysis";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
+import Login from "./pages/Login/Login";
+import Account from "./pages/Account/Account";
+import { AuthProvider } from "./context/AuthContext";
 
 
 
@@ -15,16 +18,20 @@ export default function AppRoutes() {
     return (
         <>
             <BrowserRouter>
-                <Routes>
-                    <Route path="/" element={<Home></Home>} />
-                    <Route path="/ChampionMastery" element={<ChampionMastery></ChampionMastery>} />
-                    <Route path="/MatchHistory" element={<MatchHistory></MatchHistory>} />
-                    <Route path="/profile/:region/:nameTag/overview" element={<MatchHistory></MatchHistory>} />
-                    <Route path="/profile/:region/:nameTag/mastery" element={<ChampionMastery></ChampionMastery>} />
-                    <Route path="/profile/:region/:nameTag/livegame" element={<LiveGame></LiveGame>} />
-                    <Route path="/profile/:region/:nameTag/analysis" element={<Analysis></Analysis>} />
-                    <Route path="/leaderboard" element={<Leaderboard></Leaderboard>} />
-                </Routes>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/ChampionMastery" element={<ChampionMastery />} />
+                        <Route path="/MatchHistory" element={<MatchHistory />} />
+                        <Route path="/profile/:region/:nameTag/overview" element={<MatchHistory />} />
+                        <Route path="/profile/:region/:nameTag/mastery" element={<ChampionMastery />} />
+                        <Route path="/profile/:region/:nameTag/livegame" element={<LiveGame />} />
+                        <Route path="/profile/:region/:nameTag/analysis" element={<Analysis />} />
+                        <Route path="/leaderboard" element={<Leaderboard />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/account" element={<Account />} />
+                    </Routes>
+                </AuthProvider>
             </BrowserRouter>
         </>
 

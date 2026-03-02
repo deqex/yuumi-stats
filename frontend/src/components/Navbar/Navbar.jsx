@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import catLogo from '../../assets/img/cat.png';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const isLeaderboard = location.pathname === '/leaderboard';
 
   return (
@@ -28,6 +31,22 @@ export default function Navbar() {
         >
           Leaderboard
         </Link>
+        {user ? (
+          <Link
+            to="/account"
+            className="navbar-login-btn"
+            style={{ textDecoration: 'none' }}
+          >
+            {user.username}
+          </Link>
+        ) : (
+          <button
+            className="navbar-login-btn"
+            onClick={() => navigate('/login')}
+          >
+            Log In
+          </button>
+        )}
       </div>
     </nav>
   );

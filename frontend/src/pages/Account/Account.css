@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+
+* { font-family: 'Lexend', sans-serif; }
+
+body { margin: 0; background: #f7f5fa; }
+
+.account-page {
+  min-height: 100vh;
+  background: #f7f5fa;
+}
+
+.account-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 80px 16px;
+}
+
+.account-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 40px 0 rgba(139, 92, 246, 0.13);
+  padding: 40px 44px 44px;
+  width: 100%;
+  max-width: 460px;
+  border: 1.5px solid #ede9fe;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.account-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+}
+
+.account-username {
+  font-size: 22px;
+  font-weight: 700;
+  color: #3b0764;
+  margin: 0 0 4px;
+}
+
+.account-sub {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.account-divider {
+  height: 1px;
+  background: #f3e8ff;
+  margin-bottom: 28px;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.account-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b21a8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-field input {
+  border: 1.5px solid #e0c3fc;
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 15px;
+  color: #333;
+  background: #faf5ff;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  font-family: 'Lexend', sans-serif;
+}
+
+.account-field input:focus {
+  border-color: #A78BFA;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.account-field-hint {
+  font-size: 12px;
+  color: #a78bfa;
+}
+
+.account-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 0;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  padding: 8px 12px;
+}
+
+.account-success {
+  color: #16a34a;
+  font-size: 13px;
+  margin: 0;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.account-save {
+  background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.22);
+  transition: opacity 0.18s, transform 0.1s;
+  font-family: 'Lexend', sans-serif;
+}
+
+.account-save:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.account-save:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.account-logout {
+  width: 100%;
+  margin-top: 20px;
+  background: transparent;
+  border: 1.5px solid #e0c3fc;
+  border-radius: 10px;
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7C3AED;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  font-family: 'Lexend', sans-serif;
+}
+
+.account-logout:hover {
+  background: #faf5ff;
+}
