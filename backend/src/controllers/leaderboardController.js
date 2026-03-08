@@ -3,6 +3,8 @@ import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
 import { getBroadRegion } from "../utils/getBroadRegion.js";
 
+const cache = new Map(); 
+const CACHE_TTL_MS = 30 * 60 * 1000; 
 const backgroundFetching = new Set();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -50,8 +52,19 @@ async function fetchMissingDataBackground(workItems, broadRegion, apiKey, region
 
         if (Object.keys(dbPatch).length > 0) {
             console.log(`[Leaderboard] [DB]  upsert   ${puuid.slice(0, 8)}… >>`, Object.keys(dbPatch).join(', '));
-            Profile.updateOne({ puuid }, { $set: dbPatch }, { upsert: true })
+            await Profile.updateOne({ puuid }, { $set: dbPatch }, { upsert: true })
                 .catch(e => console.warn(`[Leaderboard] [DB]  upsert   ${puuid.slice(0, 8)}… >> ${e.message}`));
+
+            const cached = cache.get(region);
+            if (cached) {
+                const player = cached.players.find(p => p.puuid === puuid);
+                if (player) {
+                    if (dbPatch.gameName)      player.gameName      = dbPatch.gameName;
+                    if (dbPatch.tagLine)       player.tagLine       = dbPatch.tagLine;
+                    if (dbPatch.icon != null)  player.profileIconId = dbPatch.icon;
+                    if (dbPatch.summonerLevel) player.summonerLevel = dbPatch.summonerLevel;
+                }
+            }
         }
     }
 
@@ -62,11 +75,18 @@ async function fetchMissingDataBackground(workItems, broadRegion, apiKey, region
 export async function getLeaderboard(req, res) {
     try {
         const region = (req.query.region || 'EUN1').toUpperCase();
+
+        const cached = cache.get(region);
+        if (cached && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS) {
+            console.log(`[Leaderboard] cache hit — ${region}`);
+            return res.json({ tier: cached.tier, region, players: cached.players });
+        }
+
         const broadRegion = getBroadRegion(region);
         const apiKey = getApiKey();
         const regionLower = region.toLowerCase();
 
-        console.log(`[Leaderboard] [API]   challenger list ${region}`);
+        console.log(`[Leaderboard] [API] challenger list ${region}`);
         const listRes = await riotFetch(
             `https://${regionLower}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${apiKey}`
         );
@@ -77,14 +97,13 @@ export async function getLeaderboard(req, res) {
             .sort((a, b) => b.leaguePoints - a.leaguePoints)
             .slice(0, 50);
 
-        console.log(`[Leaderboard] [DB]    bulk lookup — top 50 puuids`);
         const puuids = top50.map(e => e.puuid);
         const profiles = await Profile.find(
             { puuid: { $in: puuids } },
             'puuid gameName tagLine icon summonerLevel'
         ).lean();
         const profileMap = new Map(profiles.map(p => [p.puuid, p]));
-        console.log(`[Leaderboard] [DB]    found ${profiles.length}/50 profiles`);
+        console.log(`[Leaderboard] [DB] found ${profiles.length}/50 profiles`);
 
         const players = top50.map((entry, i) => {
             const p = profileMap.get(entry.puuid);
@@ -105,6 +124,9 @@ export async function getLeaderboard(req, res) {
             };
         });
 
+        cache.set(region, { tier: list.tier, players, fetchedAt: Date.now() });
+        res.json({ tier: list.tier, region, players });
+
         const workItems = top50
             .filter(e => {
                 const p = profileMap.get(e.puuid);
@@ -119,11 +141,6 @@ export async function getLeaderboard(req, res) {
                     needsLevel: !p?.summonerLevel,
                 };
             });
-
-        const complete = workItems.length === 0;
-        console.log(`[Leaderboard] sending ${players.length} players — ${workItems.length} missing, complete=${complete}`);
-
-        res.json({ tier: list.tier, region, players, complete });
 
         if (workItems.length > 0 && !backgroundFetching.has(region)) {
             backgroundFetching.add(region);

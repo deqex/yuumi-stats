@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components';
 import './Leaderboard.css';
@@ -75,33 +75,13 @@ function PlayerRow({ player, region }) {
   );
 }
 
-const POLL_INTERVAL_MS = 5000;
-
 export default function Leaderboard() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [region, setRegion]   = useState('EUN1');
-  const pollRef = useRef(null);
-
-  const hasMissing = (d) => !d?.complete && d?.players?.some(p => !p.gameName || p.profileIconId == null);
-
-  const stopPolling = () => {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-  };
-
-  const silentRefresh = async (r) => {
-    try {
-      const res = await fetch(`/api/leaderboard?region=${r}`);
-      if (!res.ok) return;
-      const next = await res.json();
-      setData(next);
-      if (!hasMissing(next)) stopPolling();
-    } catch { /* silent — don't disrupt the visible table */ }
-  };
 
   const fetchLeaderboard = async (r) => {
-    stopPolling();
     setLoading(true);
     setError('');
     setData(null);
@@ -111,11 +91,7 @@ export default function Leaderboard() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Request failed (${res.status})`);
       }
-      const d = await res.json();
-      setData(d);
-      if (hasMissing(d)) {
-        pollRef.current = setInterval(() => silentRefresh(r), POLL_INTERVAL_MS);
-      }
+      setData(await res.json());
     } catch (err) {
       setError(err.message || 'Failed to load leaderboard.');
     } finally {
@@ -125,7 +101,6 @@ export default function Leaderboard() {
 
   useEffect(() => {
     fetchLeaderboard(region);
-    return stopPolling;
   }, [region]);
 
   return (
@@ -151,13 +126,6 @@ export default function Leaderboard() {
           <div className="lb-loading">
             <div className="lb-spinner" />
             <span>Loading challenger data…</span>
-          </div>
-        )}
-
-        {!loading && data && hasMissing(data) && (
-          <div className="lb-fetching-names">
-            <div className="lb-spinner lb-spinner-sm" />
-            <span>Fetching player data in the background…</span>
           </div>
         )}
 

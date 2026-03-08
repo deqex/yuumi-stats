@@ -8,6 +8,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isLeaderboard = location.pathname === '/leaderboard';
+  const isGroups = location.pathname.startsWith('/groups');
 
   return (
     <nav className="navbar">
@@ -18,12 +19,18 @@ export default function Navbar() {
       <div className="navbar-nav">
         <Link
           to="/"
-          className={`navbar-item ${!isLeaderboard ? 'active' : ''}`}
+          className={`navbar-item ${!isLeaderboard && !isGroups ? 'active' : ''}`}
           style={{ textDecoration: 'none' }}
         >
           Player search
         </Link>
-        <span className="navbar-item">Groups</span>
+        <Link
+          to="/groups"
+          className={`navbar-item ${isGroups ? 'active' : ''}`}
+          style={{ textDecoration: 'none' }}
+        >
+          Groups
+        </Link>
         <Link
           to="/leaderboard"
           className={`navbar-item ${isLeaderboard ? 'active' : ''}`}

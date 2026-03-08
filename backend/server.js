@@ -7,6 +7,7 @@ import masteryRoutes from './src/routes/masteryRoutes.js';
 import profileRoutes from './src/routes/profileRoutes.js';
 import leaderboardRoutes from './src/routes/leaderboardRoutes.js';
 import authRoutes from './src/routes/authRoutes.js';
+import groupRoutes from './src/routes/groupRoutes.js';
 import dns from "node:dns/promises";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use("/api/mastery", masteryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/groups", groupRoutes);
 
 
 dns.setServers(["1.1.1.1"]);

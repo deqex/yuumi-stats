@@ -52,6 +52,9 @@ export async function getAnalysisData(req, res) {
         const now = Math.floor(Date.now() / 1000);
         const startTime = now - days * 24 * 60 * 60;
 
+        const apiDelayMs = Math.round((days / 365) * 1500);
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
         const matches = [];
         let idStart = 0;
         let totalIdsFetched = 0;
@@ -85,10 +88,11 @@ export async function getAnalysisData(req, res) {
                     gameDuration = cached.gameDuration;
                     if (p) gamePosition = dbPosition(p);
                 } else {
-                    console.log(`[Analysis][API] ${matchId}`);
+                    console.log(`[Analysis][API] ${matchId} (delay ${apiDelayMs}ms)`);
                     const matchRes = await riotFetch(
                         `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`
                     );
+                    await sleep(apiDelayMs);
                     if (!matchRes.ok) continue;
                     const matchData = await matchRes.json();
 
@@ -127,10 +131,14 @@ export async function getAnalysisData(req, res) {
                     }
                 }
 
-                if (gameCreationSec < startTime) {
+                if (gameCreationSec > 0 && gameCreationSec < startTime) {
                     console.log(`[Analysis] reached time limit at ${matchId} - stopping`);
                     keepFetching = false;
                     break;
+                }
+                if (gameCreationSec === 0) {
+                    console.log(`[Analysis] skip ${matchId} - missing gameCreation`);
+                    continue;
                 }
 
                 if (!p) continue;

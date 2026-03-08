@@ -9,6 +9,8 @@ import Analysis from "./pages/Analysis/Analysis";
 import Leaderboard from "./pages/Leaderboard/Leaderboard";
 import Login from "./pages/Login/Login";
 import Account from "./pages/Account/Account";
+import Groups from "./pages/Group/Groups";
+import Group from "./pages/Group/Group";
 import { AuthProvider } from "./context/AuthContext";
 
 
@@ -30,6 +32,8 @@ export default function AppRoutes() {
                         <Route path="/leaderboard" element={<Leaderboard />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/account" element={<Account />} />
+                        <Route path="/groups" element={<Groups />} />
+                        <Route path="/groups/:groupId" element={<Group />} />
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>
