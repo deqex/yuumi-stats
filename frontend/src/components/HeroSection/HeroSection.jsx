@@ -9,7 +9,7 @@ export default function HeroSection() {
         alt="Hero Banner"
         className="hero-banner-image"
       />
-      <h1 className="title">Yuumi.gg</h1>
+      <h1 className="title">Yuumi Stats</h1>
     </div>
   );
 }

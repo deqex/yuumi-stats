@@ -2,13 +2,20 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme_secret_key';
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('Missing JWT_SECRET in backend .env');
+  return secret;
+}
 
 export const register = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
+  }
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Invalid input.' });
   }
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password must be at least 6 characters.' });
@@ -22,7 +29,7 @@ export const register = async (req, res) => {
   const hashed = await bcrypt.hash(password, 10);
   const user = await User.create({ username, password: hashed });
 
-  const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ id: user._id, username: user.username }, getJwtSecret(), { expiresIn: '7d' });
 
   res.status(201).json({ token, username: user.username, leagueName: user.leagueName });
 };
@@ -32,6 +39,9 @@ export const login = async (req, res) => {
 
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required.' });
+  }
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Invalid input.' });
   }
 
   const user = await User.findOne({ username });
@@ -44,7 +54,7 @@ export const login = async (req, res) => {
     return res.status(401).json({ message: 'Invalid username or password.' });
   }
 
-  const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ id: user._id, username: user.username }, getJwtSecret(), { expiresIn: '7d' });
 
   res.json({ token, username: user.username, leagueName: user.leagueName });
 };

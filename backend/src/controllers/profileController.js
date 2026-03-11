@@ -52,6 +52,10 @@ export async function getProfile(req, res) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
+        if (forceUpdate === 'true' && !req.userId) {
+            return res.status(403).json({ error: 'forceUpdate requires authentication.' });
+        }
+
         const fullName = `${summonerName}#${summonerTag}`;
 
         if (forceUpdate !== 'true') {

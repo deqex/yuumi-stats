@@ -44,6 +44,15 @@ export async function addMember(req, res) {
     if (!summonerName || !summonerTag || !region) {
       return res.status(400).json({ error: 'summonerName, summonerTag, and region are required.' });
     }
+    if (typeof summonerName !== 'string' || summonerName.length > 100) {
+      return res.status(400).json({ error: 'Invalid summonerName.' });
+    }
+    if (typeof summonerTag !== 'string' || summonerTag.length > 20) {
+      return res.status(400).json({ error: 'Invalid summonerTag.' });
+    }
+    if (!/^[A-Z0-9]{2,6}$/i.test(region)) {
+      return res.status(400).json({ error: 'Invalid region.' });
+    }
     if (group.members.length >= 15) {
       return res.status(400).json({ error: 'Groups can have at most 15 members.' });
     }

@@ -11,6 +11,7 @@ import {
     getParticipantStats,
 } from "../controllers/matchesController.js";
 import { getAnalysisData } from "../controllers/analysisController.js";
+import { optionalAuth } from "../middleware/optionalAuth.js";
 
 const require = createRequire(import.meta.url);
 const queuesData = require("../utils/queues.json");
@@ -23,7 +24,7 @@ router.get("/summoner", getSummoner);
 router.get("/ranks", getRankEntries);
 router.get("/rank-by-puuid", getRankByPuuid);
 router.get("/match-ids", getMatchIds);
-router.get("/match/:matchId", getMatchData);
+router.get("/match/:matchId", optionalAuth, getMatchData);
 router.get("/live-game", getLiveGame);
 router.get("/participant-stats", getParticipantStats);
 router.get("/analysis", getAnalysisData);

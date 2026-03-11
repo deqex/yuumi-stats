@@ -5,13 +5,13 @@ export async function genScore(players, gameInfo) {
     let totalDamageAllPlayers = Object.values(players).reduce((acc, p) => acc + (p.totalDamageDealtToChampions ?? 0), 0);
 
     Object.values(players).forEach(p => {
-        let kdaScore = (((p.kills ?? 0) * 1.5 + (p.assists ?? 0) - (p.deaths ?? 0)) / gameDuration)*1200;
+        let kdaScore = (((p.kills ?? 0) * 1.4 + (p.assists ?? 0) - (p.deaths ?? 0)) / gameDuration)*1200;
         
         let visionScore = (p.visionScore ?? 0) * 400 / gameDuration;
         let csScore = ((p.champExperience ?? 0) / gameDuration);
         let enchanterScore = (((p.totalDamageShieldedOnTeammates ?? 0) + (p.totalHealsOnTeammates ?? 0)) *1.3) / gameDuration;
         let tankScore = (((p.totalDamageTaken ?? 0) + (p.damageSelfMitigated ?? 0)) / gameDuration) * 0.3;
-        let ccScore = (p.timeCCingOthers*300 ?? 0) / gameDuration;
+        let ccScore = ((p.timeCCingOthers ?? 0) * 300) / gameDuration;
         let goldScore = (((p.goldEarned ?? 0) / totalGoldEarned) * 100)*1.5;
         let damageScore = (totalDamageAllPlayers ? ((p.totalDamageDealtToChampions ?? 0) / totalDamageAllPlayers) * 100 : 0)*1.6;
 
@@ -44,10 +44,3 @@ export async function genScore(players, gameInfo) {
 
     return players;
 }
-// pocet score za goldy = % goldu ze hry
-//let goldScore = ((p.goldEarned ?? 0) / gameDuration) * 2;
-//let damageScore = (p.totalDamageDealtToChampions ?? 0) / gameDuration;
-
-
-//issues
-//ccScore & nocturne

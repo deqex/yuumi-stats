@@ -30,6 +30,10 @@ export async function getChampionMastery(req, res) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
 
+        if (forceUpdate === 'true' && !req.userId) {
+            return res.status(403).json({ error: 'forceUpdate requires authentication.' });
+        }
+
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
 
         if (forceUpdate !== 'true') {

@@ -10,7 +10,6 @@ export default function dissectMatchData(matchData) {
   }
 
   const result = {};
-  const gameDuration = matchData.info.gameDuration
 
   participants.forEach((p, index) => {
     const key = `player${index}`;

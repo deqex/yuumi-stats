@@ -59,6 +59,10 @@ export async function getMatchData(req, res) {
             return res.status(400).json({ error: "matchId is required" });
         }
 
+        if (forceUpdate === 'true' && !req.userId) {
+            return res.status(403).json({ error: 'forceUpdate requires authentication.' });
+        }
+
         if (forceUpdate !== 'true') {
             const cached = await Match.findOne({ matchId }).lean();
             if (cached) {
@@ -307,7 +311,8 @@ export async function getRankByPuuid(req, res) {
         return res.json(ranks);
     } catch (error) {
         console.error("getRankByPuuid error:", error);
-        if (!res.headersSent) return res.json([]);
+        const status = error.statusCode || 500;
+        return res.status(status).json({ error: error.message });
     }
 }
 

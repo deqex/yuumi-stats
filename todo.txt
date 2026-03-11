@@ -1,8 +1,0 @@
-- make puuid fetcher its own file and function
-- fix puuid fetcher to change regions
-- move the page into a component
-- add match history
-
-long term:
-- player stats based on last matches
-- champion winrate and banrate data
