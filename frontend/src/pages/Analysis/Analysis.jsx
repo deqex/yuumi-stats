@@ -447,6 +447,7 @@ export default function Analysis() {
           <div className="analysis-load-area">
             <div className="analysis-load-icon">📊</div>
             <p className="analysis-load-title">Player Analysis</p>
+            <p className="analysis-load-subtitle">This may take a moment if the data isn't cached yet.</p>
             <button className="analysis-load-btn" onClick={handleLoad}>
               Load Analysis
             </button>

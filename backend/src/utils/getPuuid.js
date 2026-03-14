@@ -1,8 +1,18 @@
 import { getBroadRegion } from "./getBroadRegion.js";
 import { getApiKey } from "./getApiKey.js";
 import { riotFetch } from "./riotFetch.js";
+import Profile from "../models/Profile.js";
 
 async function fetchPuuid(summonerName, summonerTag, region) {
+    const dbProfile = await Profile.findOne({
+        gameName: { $regex: new RegExp(`^${summonerName}$`, 'i') },
+        tagLine:  { $regex: new RegExp(`^${summonerTag}$`,  'i') },
+    }, 'puuid').lean();
+    if (dbProfile?.puuid) {
+        console.log(`[PUUID] DB hit for ${summonerName}#${summonerTag}`);
+        return dbProfile.puuid;
+    }
+
     const broadRegion = getBroadRegion(region);
     const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}?api_key=${getApiKey()}`;
     const res = await riotFetch(url);

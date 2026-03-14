@@ -28,11 +28,17 @@ async function saveProfileToDb(summonerName, puuid, icon, rankEntries, summonerL
         losses: e.losses ?? 0,
     }));
 
+    const [gameName, tagLine] = summonerName.includes('#')
+        ? summonerName.split('#')
+        : [summonerName, ''];
+
     const profile = await Profile.findOneAndUpdate(
         { puuid },
         {
             summonerName,
             puuid,
+            gameName,
+            tagLine,
             icon,
             ranks,
             summonerLevel,
@@ -50,10 +56,6 @@ export async function getProfile(req, res) {
         const { summonerName, summonerTag, region, forceUpdate } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
-        }
-
-        if (forceUpdate === 'true' && !req.userId) {
-            return res.status(403).json({ error: 'forceUpdate requires authentication.' });
         }
 
         const fullName = `${summonerName}#${summonerTag}`;

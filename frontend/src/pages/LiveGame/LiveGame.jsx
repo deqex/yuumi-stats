@@ -137,6 +137,7 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
   const subTreeImg  = RUNE_TREE_ICONS[subStyleId] || null;
 
   const [gameName, tagLine] = (participant.riotId || '#').split('#');
+  const isStreamer = !tagLine;
 
   const level    = statsData?.summonerLevel ?? null;
   const rankText = statsData ? formatRank(statsData.ranks) : null;
@@ -168,7 +169,7 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
 
       <div className="lg-card-info">
         <div className="lg-card-name">
-          {gameName}<span className="lg-card-tag">#{tagLine}</span>
+          {gameName}{!isStreamer && <span className="lg-card-tag">#{tagLine}</span>}
         </div>
 
         {loading ? (
@@ -260,34 +261,9 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
             </div>
           </>
         ) : (
-          <>
-            <div className="lg-stat-kda-row">
-              <span className="lg-kda-val">—</span>
-              <span className="lg-kda-sep">/</span>
-              <span className="lg-kda-val lg-kda-d">—</span>
-              <span className="lg-kda-sep">/</span>
-              <span className="lg-kda-val">—</span>
-            </div>
-            <div className="lg-kda-ratio">— KDA</div>
-            <div className="lg-stat-grid">
-              <div className="lg-stat-cell">
-                <span className="lg-stat-lbl">WR</span>
-                <span className="lg-stat-val">—</span>
-              </div>
-              <div className="lg-stat-cell">
-                <span className="lg-stat-lbl">CS/MIN</span>
-                <span className="lg-stat-val">—</span>
-              </div>
-              <div className="lg-stat-cell">
-                <span className="lg-stat-lbl">KP</span>
-                <span className="lg-stat-val">—</span>
-              </div>
-              <div className="lg-stat-cell">
-                <span className="lg-stat-lbl">AI SCR</span>
-                <span className="lg-stat-val">—</span>
-              </div>
-            </div>
-          </>
+          <div className="lg-streamer-stats-msg">
+            <span>Streamer mode enabled</span>
+          </div>
         )}
       </div>
 

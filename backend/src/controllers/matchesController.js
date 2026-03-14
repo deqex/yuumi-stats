@@ -59,10 +59,6 @@ export async function getMatchData(req, res) {
             return res.status(400).json({ error: "matchId is required" });
         }
 
-        if (forceUpdate === 'true' && !req.userId) {
-            return res.status(403).json({ error: 'forceUpdate requires authentication.' });
-        }
-
         if (forceUpdate !== 'true') {
             const cached = await Match.findOne({ matchId }).lean();
             if (cached) {
