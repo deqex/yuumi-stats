@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { connectDB } from './src/config/db.js';
 import dotenv from 'dotenv';
 import matchesRoutes from './src/routes/matchesRoutes.js';
@@ -19,16 +20,35 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use("/api/matches", matchesRoutes);
-app.use("/api/mastery", masteryRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/leaderboard", leaderboardRoutes);
+// General API rate limit
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+// Limit for endpoints that hit Riot API — skips /matches/analysis
+const riotLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+  skip: (req) => req.path === '/analysis',
+});
+
 app.use("/api/auth", authRoutes);
-app.use("/api/groups", groupRoutes);
+app.use("/api/matches", riotLimiter, matchesRoutes);
+app.use("/api/mastery", riotLimiter, masteryRoutes);
+app.use("/api/profile", riotLimiter, profileRoutes);
+app.use("/api/leaderboard", apiLimiter, leaderboardRoutes);
+app.use("/api/groups", apiLimiter, groupRoutes);
 
 
 dns.setServers(["1.1.1.1"]);
-console.log(await dns.getServers());
+console.log(dns.getServers());
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });

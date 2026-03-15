@@ -1,3 +1,5 @@
+import { toast } from './toast';
+
 const API_BASE = '/api/mastery';
 
 export async function getChampionMastery(summonerName, summonerTag, region, forceUpdate = false) {
@@ -5,6 +7,10 @@ export async function getChampionMastery(summonerName, summonerTag, region, forc
         const params = new URLSearchParams({ summonerName, summonerTag, region });
         if (forceUpdate) params.set('forceUpdate', 'true');
         const res = await fetch(`${API_BASE}/champion-mastery?${params}`);
+        if (res.status === 429) {
+            toast.warn('Too many requests — slow down a bit.');
+            return [];
+        }
         if (!res.ok) throw new Error('Failed to fetch champion mastery');
         const champs = await res.json();
 
@@ -32,6 +38,7 @@ export async function getChampionMastery(summonerName, summonerTag, region, forc
 
     } catch (error) {
         console.error('Error:', error);
+        toast.error('Failed to load champion mastery. Please try again.');
         return [];
     }
 }

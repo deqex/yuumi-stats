@@ -130,10 +130,11 @@ export default function MatchDetail({ match, focusName, region }) {
     return `${pos}th`;
   };
 
+  const CHAMPION_NAME_FIXES = { FiddleSticks: 'Fiddlesticks' };
   const getChampionImgUrl = (name) => {
     if (!name) return null;
     const id = String(name).replace(/[^A-Za-z]/g, '');
-    return id ? `${DD_CHAMPION_ICON_BASE}/${id}.png` : null;
+    return id ? `${DD_CHAMPION_ICON_BASE}/${CHAMPION_NAME_FIXES[id] || id}.png` : null;
   };
 
   const getItemIconUrl = (id) => {

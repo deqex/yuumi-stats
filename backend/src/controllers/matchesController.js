@@ -134,7 +134,7 @@ export async function getParticipantStats(req, res) {
         const apiKey = getApiKey();
         const regionLower = region.toLowerCase();
 
-        // Fetch rank, summoner level, and match IDs in parallel
+        // Fetch rank, summoner level, and match IDs parallel
         const [rankRes, summonerRes, matchIdsRes] = await Promise.all([
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`),
             riotFetch(`https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`),
@@ -300,7 +300,7 @@ export async function getRankByPuuid(req, res) {
             return res.json(JSON.parse(JSON.stringify(profile.ranks)));
         }
 
-        // Fall back to Riot API
+        // fallabck to Riot API
         const apiKey = getApiKey();
         const rankRes = await riotFetch(`https://${region.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${apiKey}`);
         const ranks = rankRes?.ok ? await rankRes.json() : [];
@@ -452,8 +452,8 @@ export async function getAggregatedStats(req, res) {
 
             if (!p) continue;
 
-            // Role filter — uses individualPosition (TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY).
-            // ARAM (queueId 450) has no assigned position so always passes through.
+            // Role filter: individualPosition
+            // ARAM (queueId 450)
             if (allowedRoles) {
                 const gameRole = p.individualPosition || '';
                 if (gameRole && gameRole !== 'NONE') {
@@ -464,7 +464,7 @@ export async function getAggregatedStats(req, res) {
                 }
             }
 
-            // Skip remakes and games ended before 14 minutes
+            // Skip remakes 
             if (gameDuration < 14 * 60) {
                 console.log(`[Analysis] skip ${matchId} — too short (${Math.round(gameDuration / 60)}m)`);
                 continue;
@@ -534,7 +534,7 @@ export async function getAggregatedStats(req, res) {
         const n = totalGames;
         console.log(`[Analysis] complete — ${n}/${totalIdsFetched} IDs fetched for ${summonerName}#${summonerTag}`);
 
-        // Build a stat object with avg, total, max, min
+        // build a stat object with avg, total, max, min
         const stat = (t, round = false) => {
             const avg = n > 0 ? (round ? Math.round(t.total / n) : +(t.total / n).toFixed(2)) : 0;
             return {

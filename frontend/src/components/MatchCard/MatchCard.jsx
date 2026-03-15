@@ -94,12 +94,13 @@ export default function MatchCard({ data, focusName }) {
     );
   };
 
+  const CHAMPION_NAME_FIXES = { FiddleSticks: 'Fiddlesticks' };
   // Resolve champion icon via DDragon CDN
   const getChampionImgUrl = (championName) => {
     if (!championName) return null;
     const id = String(championName).replace(/[^A-Za-z]/g, '');
     if (!id) return null;
-    return `${DD_CHAMPION_ICON_BASE}/${id}.png`;
+    return `${DD_CHAMPION_ICON_BASE}/${CHAMPION_NAME_FIXES[id] || id}.png`;
   };
 
   const ChampIcon = ({ name }) => {

@@ -326,11 +326,12 @@ export default function MatchHistory() {
     8400: ResolveTreeIcon,
   };
 
+  const CHAMPION_NAME_FIXES = { FiddleSticks: 'Fiddlesticks' };
   const getChampionIconUrl = (name) => {
     if (!name) return null;
     const id = String(name).replace(/[^A-Za-z]/g, '');
     if (!id) return null;
-    return `${DD_CHAMPION_ICON_BASE}/${id}.png`;
+    return `${DD_CHAMPION_ICON_BASE}/${CHAMPION_NAME_FIXES[id] || id}.png`;
   };
 
   const getItemIconUrl = (id) => {

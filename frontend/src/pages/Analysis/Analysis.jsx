@@ -677,7 +677,7 @@ export default function Analysis() {
                             <div className="champ-card-top">
                               <img
                                 className="champ-card-icon"
-                                src={`https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion/${c.championName}.png`}
+                                src={`https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion/${{ FiddleSticks: 'Fiddlesticks' }[c.championName] || c.championName}.png`}
                                 alt={c.championName}
                               />
                               <div className="champ-card-identity">

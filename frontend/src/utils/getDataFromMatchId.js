@@ -1,3 +1,5 @@
+import { toast } from './toast';
+
 const API_BASE = '/api/matches';
 
 export async function getDataFromMatchId(matchId, region, forceUpdate = false) {
@@ -12,12 +14,16 @@ export async function getDataFromMatchId(matchId, region, forceUpdate = false) {
         const token = localStorage.getItem('token');
         if (token) headers['Authorization'] = `Bearer ${token}`;
         const res = await fetch(`${API_BASE}/match/${encodeURIComponent(matchId)}${qs ? '?' + qs : ''}`, { headers });
+        if (res.status === 429) {
+            toast.warn('Too many requests — slow down a bit.');
+            return null;
+        }
         if (!res.ok) throw new Error('Failed to fetch match data');
-        const matchData = await res.json();
-        return matchData;
+        return await res.json();
     } catch (error) {
         console.error('Error:', error);
-        return [];
+        toast.error('Failed to load match data. Please try again.');
+        return null;
     }
 }
 

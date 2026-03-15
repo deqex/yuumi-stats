@@ -1,6 +1,5 @@
-import React from "react";
-
 import { BrowserRouter, Routes, Route, } from "react-router-dom";
+import Toast from "./components/Toast/Toast";
 import ChampionMastery from "./pages/ChampionMastery/ChampionMastery";
 import Home from "./pages/Home/Home";
 import MatchHistory from "./pages/MatchHistory/MatchHistory";
@@ -36,6 +35,7 @@ export default function AppRoutes() {
                         <Route path="/groups/:groupId" element={<Group />} />
                     </Routes>
                 </AuthProvider>
+                <Toast />
             </BrowserRouter>
         </>
 
