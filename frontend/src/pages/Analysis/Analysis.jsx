@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDDragon } from '../../context/DDragonContext';
 import { Navbar } from '../../components';
 
 import topIcon    from '../../utils/position-top.svg';
@@ -334,6 +335,7 @@ function markClientCache(region, summonerName, summonerTag) {
 
 
 export default function Analysis() {
+  const ddVersion = useDDragon();
   const params = useParams();
   const navigate = useNavigate();
 
@@ -677,7 +679,7 @@ export default function Analysis() {
                             <div className="champ-card-top">
                               <img
                                 className="champ-card-icon"
-                                src={`https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion/${{ FiddleSticks: 'Fiddlesticks' }[c.championName] || c.championName}.png`}
+                                src={`https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion/${{ FiddleSticks: 'Fiddlesticks' }[c.championName] || c.championName}.png`}
                                 alt={c.championName}
                               />
                               <div className="champ-card-identity">

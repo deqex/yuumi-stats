@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
-
-// DDragon CDN base for champion icons
-const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
+import { useDDragon } from '../../context/DDragonContext';
 
 // data: result of dissectMatchData(matchData)
 // focusName: summoner name to highlight (riotIdGameName)
 //test
 
 export default function MatchCard({ data, focusName }) {
+  const ddVersion = useDDragon();
+  const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
   if (!data) return null;
 
   const players = Object.values(data);

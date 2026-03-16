@@ -2,9 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getChampionMastery } from '../../utils/getChampionMastery';
 import { Navbar } from '../../components';
+import { useDDragon } from '../../context/DDragonContext';
 import './ChampionMastery.css';
-
-const DDRAGON_VERSION = '16.3.1';
 
 function formatPoints(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -35,6 +34,7 @@ function formatLastPlayed(timestamp) {
 }
 
 export default function ChampionMastery() {
+  const DDRAGON_VERSION = useDDragon();
   const [summonerName, setSummonerName] = useState('');
   const [summonerTag, setSummonerTag] = useState('');
   const [region, setRegion] = useState('euw1');

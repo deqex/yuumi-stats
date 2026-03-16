@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './MatchDetail.css';
 import { getRankByPuuid } from '../../utils/getRankByPuuid';
 import { getRankColor } from '../../utils/getRankColor';
+import { useDDragon } from '../../context/DDragonContext';
 
 import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
 import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
@@ -11,9 +12,6 @@ import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
 
 
 
-const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
-const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
-const DD_SUMMONER_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/spell';
 const DD_RUNE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/img';
 
 const SUMMONER_SPELLS = {
@@ -73,6 +71,10 @@ function formatSoloRank(ranks) {
 }
 
 export default function MatchDetail({ match, focusName, region }) {
+  const ddVersion = useDDragon();
+  const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
+  const DD_ITEM_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/item`;
+  const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
   const [rankMap, setRankMap] = useState({});
 
   useEffect(() => {

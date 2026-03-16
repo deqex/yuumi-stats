@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components';
+import { useDDragon } from '../../context/DDragonContext';
 import './Leaderboard.css';
 
-const DDRAGON = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img';
 const REGIONS = ['EUN1', 'EUW1', 'NA1', 'KR', 'BR1', 'TR1', 'JP1', 'OC1'];
 
 function PlayerRow({ player, region }) {
+  const DDRAGON = `https://ddragon.leagueoflegends.com/cdn/${useDDragon()}/img`;
   const navigate = useNavigate();
   const { rank, gameName, tagLine, leaguePoints, wins, losses, profileIconId,
           hotStreak, freshBlood, veteran, inactive, summonerLevel } = player;

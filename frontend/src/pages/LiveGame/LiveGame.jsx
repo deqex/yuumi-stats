@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDDragon } from '../../context/DDragonContext';
 import { getRankColor } from '../../utils/getRankColor';
 import { useParams, useNavigate } from 'react-router-dom';
 import './LiveGame.css';
@@ -21,9 +22,6 @@ import RankMaster     from '../../utils/DDragon/ranks/Rank=Master.png';
 import RankGrandmaster from '../../utils/DDragon/ranks/Rank=Grandmaster.png';
 import RankChallenger from '../../utils/DDragon/ranks/Rank=Challenger.png';
 
-const DD_VERSION            = '16.3.1';
-const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/champion`;
-const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/img/spell`;
 const DD_RUNE_ICON_BASE     = `https://ddragon.leagueoflegends.com/cdn/img`;
 
 const MAP_NAMES = { 11: "Summoner's Rift", 12: 'Howling Abyss' };
@@ -72,8 +70,8 @@ const RUNE_TREE_ICONS = {
 const TIER_OFFSET = { IRON: 0, BRONZE: 4, SILVER: 8, GOLD: 12, PLATINUM: 16, EMERALD: 20, DIAMOND: 24 };
 const DIV_SCORE   = { IV: 1, III: 2, II: 3, I: 4 };
 
-function champUrl(champ)  { return champ ? `${DD_CHAMPION_ICON_BASE}/${champ.id}.png` : null; }
-function spellUrl(id)     { const k = id != null ? SUMMONER_SPELLS[id] : null; return k ? `${DD_SUMMONER_ICON_BASE}/${k}.png` : null; }
+function champUrl(champ, base)  { return champ ? `${base}/${champ.id}.png` : null; }
+function spellUrl(id, base)     { const k = id != null ? SUMMONER_SPELLS[id] : null; return k ? `${base}/${k}.png` : null; }
 function runeUrl(id)      { const r = id != null ? RUNE_ICONS[id] : null; return r ? `${DD_RUNE_ICON_BASE}/${r}` : null; }
 function titleCase(str)   { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(); }
 
@@ -126,11 +124,15 @@ function calcAvgRank(puuids, statsMap) {
 }
 
 function PlayerCard({ participant, isFocused, championMap, statsData }) {
-  const champ       = championMap[String(participant.championId)];
-  const champImgUrl = champUrl(champ);
+  const ddVersion = useDDragon();
+  const champBase = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
+  const spellBase = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
 
-  const spell1      = spellUrl(participant.spell1Id);
-  const spell2      = spellUrl(participant.spell2Id);
+  const champ       = championMap[String(participant.championId)];
+  const champImgUrl = champUrl(champ, champBase);
+
+  const spell1      = spellUrl(participant.spell1Id, spellBase);
+  const spell2      = spellUrl(participant.spell2Id, spellBase);
   const keystoneId  = participant.perks?.perkIds?.[0];
   const subStyleId  = participant.perks?.perkSubStyle;
   const keystoneImg = runeUrl(keystoneId);
@@ -202,7 +204,7 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
             ))
           : statsData.recentGames.map((game, i) => {
               const c   = championMap[String(game.championId)];
-              const url = champUrl(c);
+              const url = champUrl(c, champBase);
               return (
                 <div key={i} className="lg-recent-champ">
                   <div className="lg-recent-champ-icon">
@@ -273,6 +275,9 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
 }
 
 export default function LiveGame() {
+  const ddVersion = useDDragon();
+  const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
+  const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
   const [gameData, setGameData]         = useState(null);
   const [notInGame, setNotInGame]       = useState(false);
   const [loading, setLoading]           = useState(true);

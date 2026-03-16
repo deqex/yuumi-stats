@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDDragon } from '../../context/DDragonContext';
 import './MatchHistory.css';
 import { Navbar } from '../../components';
 import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
@@ -54,6 +55,7 @@ const formatRankLabel = (entry) => {
 };
 
 export default function MatchHistory() {
+  const ddVersion = useDDragon();
   const [summonerName, setSummonerName] = useState('');
   const [summonerTag, setSummonerTag] = useState('');
   const [region, setRegion] = useState('euw1');
@@ -264,11 +266,11 @@ export default function MatchHistory() {
       .slice(0, 5);
   })();
 
-  const DD_CHAMPION_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/champion';
-  const DD_ITEM_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/item';
-  const DD_SUMMONER_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/spell';
+  const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
+  const DD_ITEM_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/item`;
+  const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
   const DD_RUNE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/img';
-  const DD_PROFILE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/16.3.1/img/profileicon';
+  const DD_PROFILE_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/profileicon`;
 
   const profileIconId = summonerData?.profileIconId ?? 588;
   const soloRank = rankEntries.find(entry => entry.queueType === 'RANKED_SOLO_5x5');
