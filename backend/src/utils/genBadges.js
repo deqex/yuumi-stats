@@ -31,7 +31,7 @@ export function genBadges(participants, gameDuration, queueId) {
 
         if (p.opScore < 40) badges.push('Struggled');
         if (p.opScore > 90) badges.push('Unstoppable');
-        if (p.opScore > 70 && p.win === false) badges.push('Unlucky');
+        if (p.opScore > 65 && p.win === false) badges.push('Unlucky');
 
         //w code
         if (p.largestMultiKill === 2) badges.push('Doublekill');
@@ -43,7 +43,7 @@ export function genBadges(participants, gameDuration, queueId) {
         if (p.firstBloodKill === true) badges.push('First Blood');
         if ((p.visionScore ?? 0) === 0) badges.push('Blind');
         if ((p.largestKillingSpree ?? 0) >= 3) badges.push('On Fire');
-        if ((p.deaths ?? 0) === 0 && p.opScore > 50) badges.push('Unkillable');
+        if ((p.deaths ?? 0) === 0 && p.opScore > 45) badges.push('Unkillable');
 
         if ((p.controlWardsPlaced ?? 0) === 0) badges.push('No control wards');
         if ((p.hadOpenNexus ?? 0) > 0) badges.push('Close game');

@@ -2,10 +2,11 @@ import { toast } from './toast';
 
 const API_BASE = '/api/matches';
 
-export async function getMatchIds(summonerName, summonerTag, region, forceUpdate = false, start = 0, count = 5) {
+export async function getMatchIds(summonerName, summonerTag, region, forceUpdate = false, start = 0, count = 5, queue = null) {
     try {
         const params = new URLSearchParams({ summonerName, summonerTag, region, start, count });
         if (forceUpdate) params.set('forceUpdate', 'true');
+        if (queue) params.set('queue', queue);
         const res = await fetch(`${API_BASE}/match-ids?${params}`);
         if (res.status === 429) {
             toast.warn('Too many requests — slow down a bit.');

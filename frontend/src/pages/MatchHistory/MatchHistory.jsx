@@ -95,12 +95,15 @@ export default function MatchHistory() {
     }
   };
 
+  const TAB_QUEUE_MAP = { ranked: 420, flex: 440, aram: 450 };
+
   const loadMoreMatches = async () => {
     if (isLoadingMore || !hasMore || !summonerName || !summonerTag) return;
     setIsLoadingMore(true);
     try {
       const currentOffset = matchOffset;
-      const newMatchIds = await getMatchIds(summonerName, summonerTag, region, false, currentOffset, 20);
+      const queueFilter = TAB_QUEUE_MAP[activeTab] ?? null;
+      const newMatchIds = await getMatchIds(summonerName, summonerTag, region, false, currentOffset, 20, queueFilter);
       if (newMatchIds.length === 0) {
         setHasMore(false);
         return;
@@ -324,6 +327,26 @@ export default function MatchHistory() {
     8200: SorceryTreeIcon,
     8300: InspirationTreeIcon,
     8400: ResolveTreeIcon,
+  };
+
+  const BADGE_DESCRIPTIONS = {
+    'MVP':               'Best player in the lobby',
+    'Richest':           'Earned the most gold in the game',
+    'Objective Stealer': 'Stole one or more objectives',
+    'Struggled':         'Had a tough game',
+    'Unstoppable':       'Showed an outstanding performance',
+    'Unlucky':           'Displayed an amazing performance but still lost',
+    'Doublekill':        'Got a doublekill',
+    'Triple kill':       'Got a triple kill',
+    'Quadra kill':       'Got a quadra kill',
+    'Pentakill':         'Got a pentakill',
+    'Turret Destroyer':  'Dealt the most turret damage in the game',
+    'First Blood':       'Got the first kill of the game',
+    'Blind':             'Had 0 vision score, shame on you',
+    'On Fire':           'Had 3 or more killing sprees',
+    'Unkillable':        'Had 0 deaths, Rekkles would be proud',
+    'No control wards':  'Did not buy a single control ward',
+    'Close game':        'Won with an open nexus',
   };
 
   const CHAMPION_NAME_FIXES = { FiddleSticks: 'Fiddlesticks' };
@@ -723,7 +746,7 @@ export default function MatchHistory() {
         {focusPlayer.badges && focusPlayer.badges.length > 0 && (
           <div className="match-badges">
             {focusPlayer.badges.map((badge, i) => (
-              <span key={i} className={`match-badge${badge === 'MVP' ? ' match-badge-mvp' : ''}`}>{badge}</span>
+              <span key={i} className={`match-badge${badge === 'MVP' ? ' match-badge-mvp' : ''}`} data-tooltip={BADGE_DESCRIPTIONS[badge]}>{badge}</span>
             ))}
           </div>
         )}

@@ -26,7 +26,7 @@ function setCacheEntry(key, data) {
 
 export async function getMatchIds(req, res) {
     try {
-        const { summonerName, summonerTag, region, forceUpdate, start = '0', count = '5' } = req.query;
+        const { summonerName, summonerTag, region, forceUpdate, start = '0', count = '5', queue } = req.query;
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
@@ -37,8 +37,9 @@ export async function getMatchIds(req, res) {
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
 
         const broadRegion = getBroadRegion(region);
-        console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region}, start=${startNum}, count=${countNum})`);
-        const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${startNum}&count=${countNum}&api_key=${getApiKey()}`;
+        console.log(`[API] fetching match IDs for ${summonerName}#${summonerTag} (${region}, start=${startNum}, count=${countNum}${queue ? `, queue=${queue}` : ''})`);
+        const queueParam = queue ? `&queue=${queue}` : '';
+        const url = `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${startNum}&count=${countNum}${queueParam}&api_key=${getApiKey()}`;
         const matchRes = await riotFetch(url);
         if (!matchRes.ok) throw new Error(`Riot API error (matchIds): ${matchRes.status}`);
         const matchIds = await matchRes.json();
