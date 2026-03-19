@@ -1,4 +1,3 @@
-// Module-level singleton — can be called from anywhere, including non-React utilities.
 const listeners = new Set();
 
 let idCounter = 0;

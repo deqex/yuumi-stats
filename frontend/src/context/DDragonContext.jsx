@@ -9,7 +9,7 @@ export function DDragonProvider({ children }) {
     fetch('https://ddragon.leagueoflegends.com/api/versions.json')
       .then(res => res.json())
       .then(versions => setVersion(versions[0]))
-      .catch(() => {}); 
+      .catch(() => console.warn('Failed to fetch DDragon version, using fallback')); 
   }, []);
 
   return (

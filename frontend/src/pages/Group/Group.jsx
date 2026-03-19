@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { timeSince } from '../../utils/timeSince';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components';
 import { useAuth } from '../../context/AuthContext';
 
@@ -373,6 +374,7 @@ function SummaryTable({ memberStats }) {
 export default function Group() {
   const { groupId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [group, setGroup]           = useState(null);
   const [groupLoading, setGroupLoading] = useState(true);
@@ -389,6 +391,7 @@ export default function Group() {
   const [selectedQueues,  setSelectedQueues]  = useState(ALL_QUEUES.filter(q => q !== 450));
   const [selectedDays,    setSelectedDays]    = useState(14);
   const [daysDirty,       setDaysDirty]       = useState(false);
+  const [lastUpdated,     setLastUpdated]     = useState(null);
 
   // manage members panel
   const [manageOpen, setManageOpen] = useState(false);
@@ -398,13 +401,31 @@ export default function Group() {
   const [addErr,     setAddErr]     = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const isOwner = user && group && user.username === group.ownerUsername;
 
+  const handleDeleteGroup = async () => {
+    if (!window.confirm('Are you sure you want to delete this group? This cannot be undone.')) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      if (!res.ok) return;
+      navigate('/groups');
+    } catch { /* ignore */ }
+    finally { setDeleteLoading(false); }
+  };
+
   // fetch group on mount
   useEffect(() => {
+    if (!user) return;
     setGroupLoading(true);
-    fetch(`/api/groups/${groupId}`)
+    fetch(`/api/groups/${groupId}`, {
+      headers: { Authorization: `Bearer ${user.token}` },
+    })
       .then(r => r.json())
       .then(data => {
         if (data.error) { setGroupError(data.error); return; }
@@ -412,7 +433,7 @@ export default function Group() {
       })
       .catch(() => setGroupError('Failed to load group.'))
       .finally(() => setGroupLoading(false));
-  }, [groupId]);
+  }, [groupId, user]);
 
   const memberDisplayName = (m) =>
     m.label?.trim() ? m.label.trim() : `${m.summonerName}#${m.summonerTag}`;
@@ -464,12 +485,13 @@ export default function Group() {
     }
 
     setHasLoaded(true);
+    setLastUpdated(new Date());
     setAnalysisLoading(false);
   }, [group]);
 
   // member stats: aggregate per member
   const memberStats = useMemo(() => {
-    if (!group) return [];
+    if (!group?.members) return [];
     return group.members.map(m => {
       const entry = memberMatches[m._id];
       if (!entry) {
@@ -685,6 +707,15 @@ export default function Group() {
                 {addLoading ? 'Adding…' : 'Add Member'}
               </button>
             </form>
+
+            <button
+              className="group-delete-btn"
+              onClick={handleDeleteGroup}
+              disabled={deleteLoading}
+              style={{ marginTop: 24 }}
+            >
+              {deleteLoading ? 'Deleting…' : 'Delete Group'}
+            </button>
           </div>
         )}
 
@@ -779,8 +810,14 @@ export default function Group() {
                   className="analysis-update-btn"
                   onClick={() => fetchAnalysis(selectedDays)}
                 >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
                   Update
                 </button>
+                {lastUpdated && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>Updated {timeSince(lastUpdated)}</div>}
               </div>
             )}
 
@@ -790,8 +827,14 @@ export default function Group() {
                   className="analysis-update-btn"
                   onClick={() => fetchAnalysis(selectedDays)}
                 >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
                   Load new players
                 </button>
+                {lastUpdated && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>Updated {timeSince(lastUpdated)}</div>}
               </div>
             )}
 

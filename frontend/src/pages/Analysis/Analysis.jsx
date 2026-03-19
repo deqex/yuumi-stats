@@ -1,5 +1,6 @@
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { timeSince } from '../../utils/timeSince';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDDragon } from '../../context/DDragonContext';
 import { Navbar } from '../../components';
@@ -119,6 +120,45 @@ function DeepStatCard({ label, statObj, mode, format }) {
   );
 }
 
+
+const BADGE_DESCRIPTIONS = {
+  'MVP':               'Best player in the lobby',
+  'Richest':           'Earned the most gold in the game',
+  'Objective Stealer': 'Stole one or more objectives',
+  'Struggled':         'Had a tough game',
+  'Unstoppable':       'Showed an outstanding performance',
+  'Unlucky':           'Displayed an amazing performance but still lost',
+  'Doublekill':        'Got a doublekill',
+  'Triple kill':       'Got a triple kill',
+  'Quadra kill':       'Got a quadra kill',
+  'Pentakill':         'Got a pentakill',
+  'Turret Destroyer':  'Dealt the most turret damage in the game',
+  'First Blood':       'Got the first kill of the game',
+  'Blind':             'Had 0 vision score, shame on you',
+  'On Fire':           'Had 3 or more killing sprees',
+  'Unkillable':        'Had 0 deaths, Rekkles would be proud',
+  'No control wards':  'Did not buy a single control ward',
+  'Close game':        'Won with an open nexus',
+};
+
+const SHAME_BADGES = new Set(['Struggled', 'Blind', 'No control wards']);
+
+const PROFILE_BADGE_DEFS = [
+  { key: 'Pentakill',         check: m => m.largestMultiKill >= 5,                       min: 1 },
+  { key: 'Unstoppable',       check: m => m.aiScore > 90,                                min: 2 },
+  { key: 'Unkillable',        check: m => m.deaths === 0 && m.aiScore > 45,             min: 2 },
+  { key: 'Unlucky',           check: m => m.aiScore > 65 && !m.win,                     min: 3 },
+  { key: 'On Fire',           check: m => m.largestKillingSpree >= 3,                   min: 3 },
+  { key: 'Objective Stealer', check: m => m.objectivesStolen > 0,                       min: 2 },
+  { key: 'First Blood',       check: m => m.firstBlood === 1,                           min: 3 },
+  { key: 'Close game',        check: m => m.hadOpenNexus > 0,                           min: 2 },
+  { key: 'Quadra kill',       check: m => m.largestMultiKill === 4,                     min: 2 },
+  { key: 'Triple kill',       check: m => m.largestMultiKill === 3,                     min: 3 },
+  { key: 'Doublekill',        check: m => m.largestMultiKill === 2,                     min: 5, minRate: 0.25 },
+  { key: 'Struggled',         check: m => m.aiScore < 40,                               min: 3, minRate: 0.20, shame: true },
+  { key: 'Blind',             check: m => m.visionScore === 0,                          min: 3, minRate: 0.15, shame: true },
+  { key: 'No control wards',  check: m => m.controlWardsPlaced === 0,                   min: 3, minRate: 0.20, shame: true },
+];
 
 function aggregateMatches(rawMatches, selectedRoles, selectedQueues) {
   if (!rawMatches) return null;
@@ -241,6 +281,15 @@ function aggregateMatches(rawMatches, selectedRoles, selectedQueues) {
     };
   };
 
+  const profileBadges = [];
+  for (const def of PROFILE_BADGE_DEFS) {
+    const count = filtered.filter(def.check).length;
+    const rate = n > 0 ? count / n : 0;
+    if (count >= def.min && (def.minRate == null || rate >= def.minRate)) {
+      profileBadges.push({ badge: def.key, count, shame: !!def.shame });
+    }
+  }
+
   const mostPlayed = [...championStats.entries()]
     .sort((a, b) => b[1].games - a[1].games)
     .slice(0, 5)
@@ -292,6 +341,7 @@ function aggregateMatches(rawMatches, selectedRoles, selectedQueues) {
     },
 
     mostPlayed,
+    profileBadges,
 
     deepStats: {
       healFromMapSources:              stat(healFromMap, true),
@@ -339,8 +389,9 @@ export default function Analysis() {
   const params = useParams();
   const navigate = useNavigate();
 
-  const summonerName = params?.nameTag?.split('-')[0] || '';
-  const summonerTag  = params?.nameTag?.split('-').slice(1).join('-') || '';
+  const lastDash = params?.nameTag?.lastIndexOf('-') ?? -1;
+  const summonerName = lastDash > 0 ? params.nameTag.slice(0, lastDash) : (params?.nameTag || '');
+  const summonerTag  = lastDash > 0 ? params.nameTag.slice(lastDash + 1) : '';
   const region = params?.region || 'euw1';
 
   const [autoLoad] = useState(() => isClientCacheValid(region, summonerName, summonerTag));
@@ -356,6 +407,7 @@ export default function Analysis() {
   const [selectedDays,   setSelectedDays]   = useState(14);
 
   const [daysDirty, setDaysDirty] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const data = useMemo(
     () => aggregateMatches(rawMatches, selectedRoles, selectedQueues),
@@ -390,6 +442,7 @@ export default function Analysis() {
       setRawMatches(json.matches);
       setHasLoaded(true);
       setDaysDirty(false);
+      setLastUpdated(new Date());
       markClientCache(region, summonerName, summonerTag);
     } catch (err) {
       setError(err.message || 'Failed to load analysis data.');
@@ -563,8 +616,14 @@ export default function Analysis() {
             {daysDirty && !loading && (
               <div className="analysis-refetch-bar">
                 <button className="analysis-update-btn" onClick={handleLoad}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
                   Update
                 </button>
+                {lastUpdated && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>Updated {timeSince(lastUpdated)}</div>}
               </div>
             )}
             {loading && (
@@ -593,6 +652,28 @@ export default function Analysis() {
                       ))}
                     </div>
                   </div>
+
+                  {data.profileBadges?.length > 0 && (
+                    <div className="analysis-section">
+                      <div className="analysis-section-header">
+                        <span className="section-title">Profile Badges</span>
+                        <div className="section-divider" />
+                        <span className="section-subtitle">earned in {data.totalGames} games</span>
+                      </div>
+                      <div className="profile-badges-row">
+                        {data.profileBadges.map(({ badge, count, shame }) => (
+                          <div
+                            key={badge}
+                            className={`profile-badge-chip${shame ? ' shame' : ''}`}
+                            data-tooltip={BADGE_DESCRIPTIONS[badge]}
+                          >
+                            <span className="profile-badge-label">{badge}</span>
+                            <span className="profile-badge-count">{count}×</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="analysis-section">
                     <div className="analysis-section-header">

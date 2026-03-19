@@ -18,7 +18,7 @@ const championMasterySchema = new mongoose.Schema({
   region: {
     type: String,
     required: true,
-    enum: ['eun1', 'euw1', 'na1', 'kr', 'br1', 'jp1', 'ru', 'oc1', 'tr1', 'la1', 'la2'],
+    enum: ['EUN1', 'EUW1', 'NA1', 'KR', 'BR1', 'JP1', 'RU', 'OC1', 'TR1', 'LA1', 'LA2', 'ME1', 'SG2', 'TW2', 'VN2'],
   },
   champions: [championEntrySchema],
   lastUpdated: {

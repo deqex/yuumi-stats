@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { timeSince } from '../../utils/timeSince';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getChampionMastery } from '../../utils/getChampionMastery';
 import { Navbar } from '../../components';
@@ -12,7 +13,7 @@ function formatPoints(n) {
 }
 
 function getLevelClass(level) {
-  if (level >= 7) return 'level-high';
+  if (level >= 10) return 'level-high';
   if (level >= 5) return 'level-mid';
   return 'level-low';
 }
@@ -42,6 +43,7 @@ export default function ChampionMastery() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const hasFetched = useRef(false);
   const params = useParams();
   const navigate = useNavigate();
@@ -51,11 +53,12 @@ export default function ChampionMastery() {
     setLoading(true);
     setError('');
     try {
-      const data = await getChampionMastery(name, tag, reg, forceUpdate);
-      if (!data || data.length === 0) {
+      const { champions, lastUpdated: fetchedAt } = await getChampionMastery(name, tag, reg, forceUpdate, DDRAGON_VERSION);
+      if (!champions || champions.length === 0) {
         setError('No mastery data found.');
       }
-      setChampions(data);
+      setChampions(champions);
+      if (fetchedAt) setLastUpdated(fetchedAt);
     } catch (err) {
       console.error(err);
       setError('Failed to fetch mastery data.');
@@ -68,7 +71,9 @@ export default function ChampionMastery() {
   // Parse URL params and auto-fetch
   useEffect(() => {
     if (!params?.region || !params?.nameTag) return;
-    const [nameFromUrl, tagFromUrl] = params.nameTag.split('-');
+    const lastDash = params.nameTag.lastIndexOf('-');
+    const nameFromUrl = lastDash > 0 ? params.nameTag.slice(0, lastDash) : params.nameTag;
+    const tagFromUrl = lastDash > 0 ? params.nameTag.slice(lastDash + 1) : '';
     setRegion(params.region);
     setSummonerName(nameFromUrl);
     setSummonerTag(tagFromUrl);
@@ -151,8 +156,14 @@ export default function ChampionMastery() {
                   disabled={isUpdating}
                   style={{ marginLeft: '12px' }}
                 >
+                  <svg className={isUpdating ? 'spin' : ''} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
                   {isUpdating ? 'Updating...' : 'Update'}
                 </button>
+                {lastUpdated && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px', marginLeft: '12px' }}>Updated {timeSince(lastUpdated)}</div>}
               </div>
             </div>
 

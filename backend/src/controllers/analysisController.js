@@ -1,14 +1,15 @@
-import { getBroadRegion } from "../utils/getBroadRegion.js";
+import { getBroadRegion, isValidRegion } from "../utils/getBroadRegion.js";
 import Match from "../models/Match.js";
 import { getCachedPuuid } from "../utils/getPuuid.js";
-import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
 import { genScore } from "../utils/genScore.js";
 import { saveMatchToDb } from "../utils/saveMatch.js";
+import { extractChallengeFields } from "../utils/extractChallengeFields.js";
 
 
 const analysisCache = new Map();
 const CACHE_TTL_MS = 45 * 60 * 1000;
+const MAX_CACHE_SIZE = 500;
 
 function getCacheEntry(key) {
     const entry = analysisCache.get(key);
@@ -18,12 +19,22 @@ function getCacheEntry(key) {
 }
 
 function setCacheEntry(key, data) {
+    if (analysisCache.size >= MAX_CACHE_SIZE) {
+        const oldest = analysisCache.keys().next().value;
+        analysisCache.delete(oldest);
+    }
     analysisCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of analysisCache) {
+        if (now > entry.expiresAt) analysisCache.delete(key);
+    }
+}, CACHE_TTL_MS);
 
-function apiPosition(p) { return p.individualPosition || ''; }
-function dbPosition(p)  { return p.individualPosition || ''; }
+
+function getPosition(p) { return p.individualPosition || ''; }
 
 
 
@@ -33,6 +44,9 @@ export async function getAnalysisData(req, res) {
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
+        if (!isValidRegion(region)) {
+            return res.status(400).json({ error: "Invalid region" });
+        }
 
         const allowedDays = [7, 14, 30, 90, 180, 365];
         let days = parseInt(daysParam, 10) || 14;
@@ -40,7 +54,6 @@ export async function getAnalysisData(req, res) {
 
         const puuid = await getCachedPuuid(summonerName, summonerTag, region);
         const broadRegion = getBroadRegion(region);
-        const apiKey = getApiKey();
 
         const cacheKey = `${puuid}:${days}`;
         const cachedResult = getCacheEntry(cacheKey);
@@ -62,7 +75,7 @@ export async function getAnalysisData(req, res) {
 
         while (keepFetching) {
             const matchIdsRes = await riotFetch(
-                `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${idStart}&count=100&api_key=${apiKey}`
+                `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${idStart}&count=100`
             );
             if (!matchIdsRes.ok) throw new Error(`Riot API error (matchIds): ${matchIdsRes.status}`);
             const batch = await matchIdsRes.json();
@@ -86,17 +99,17 @@ export async function getAnalysisData(req, res) {
                     p = cached.participantSummaries.find(ps => ps.puuid === puuid);
                     allParticipants = cached.participantSummaries;
                     gameDuration = cached.gameDuration;
-                    if (p) gamePosition = dbPosition(p);
+                    if (p) gamePosition = getPosition(p);
                 } else {
                     console.log(`[Analysis][API] ${matchId} (delay ${apiDelayMs}ms)`);
                     const matchRes = await riotFetch(
-                        `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`
+                        `https://${broadRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}`
                     );
                     await sleep(apiDelayMs);
                     if (!matchRes.ok) continue;
                     const matchData = await matchRes.json();
 
-                    saveMatchToDb(matchData, region);
+                    saveMatchToDb(matchData, region).catch(e => console.error('[saveMatch]', e.message));
 
                     gameCreationSec = (matchData.info?.gameCreation || 0) / 1000;
                     queueId = matchData.info?.queueId;
@@ -105,28 +118,10 @@ export async function getAnalysisData(req, res) {
                     gameDuration = matchData.info?.gameDuration || 0;
 
                     if (rawP) {
-                        gamePosition = apiPosition(rawP);
+                        gamePosition = getPosition(rawP);
                         p = {
                             ...rawP,
-                            controlWardsPlaced:                  rawP.challenges?.controlWardsPlaced ?? 0,
-                            epicMonsterSteals:                   rawP.challenges?.epicMonsterSteals ?? 0,
-                            flawlessAces:                        rawP.challenges?.flawlessAces ?? 0,
-                            hadOpenNexus:                        rawP.challenges?.hadOpenNexus ?? 0,
-                            perfectGame:                         rawP.challenges?.perfectGame ?? 0,
-                            takedownsInEnemyFountain:            rawP.challenges?.takedownsInEnemyFountain ?? 0,
-                            earliestBaron:                       rawP.challenges?.earliestBaron ?? 0,
-                            elderDragonKillsWithOpposingSoul:    rawP.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
-                            dancedWithRiftHerald:                rawP.challenges?.dancedWithRiftHerald ?? 0,
-                            healFromMapSources:                  rawP.challenges?.HealFromMapSources ?? 0,
-                            dragonTakedowns:                     rawP.challenges?.dragonTakedowns ?? 0,
-                            scuttleCrabKills:                    rawP.challenges?.scuttleCrabKills ?? 0,
-                            stealthWardsPlaced:                  rawP.challenges?.stealthWardsPlaced ?? 0,
-                            wardTakedowns:                       rawP.challenges?.wardTakedowns ?? 0,
-                            killsNearEnemyTurret:                rawP.challenges?.killsNearEnemyTurret ?? 0,
-                            maxCsAdvantageOnLaneOpponent:        rawP.challenges?.maxCsAdvantageOnLaneOpponent ?? 0,
-                            takedownsAfterGainingLevelAdvantage: rawP.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
-                            takedownsBeforeJungleMinionSpawn:    rawP.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
-                            abilityUses:                         rawP.challenges?.abilityUses ?? 0,
+                            ...extractChallengeFields(rawP),
                         };
                     }
                 }
@@ -180,6 +175,9 @@ export async function getAnalysisData(req, res) {
                     elderDragonKillsWithOpposingSoul:p.elderDragonKillsWithOpposingSoul || 0,
                     dancedWithRiftHerald:            p.dancedWithRiftHerald || 0,
                     earliestBaron:                   p.earliestBaron || 0,
+                    largestMultiKill:                p.largestMultiKill || 0,
+                    largestKillingSpree:             p.largestKillingSpree || 0,
+                    objectivesStolen:                p.objectivesStolen || 0,
                     healFromMapSources:              p.healFromMapSources || 0,
                     controlWardsPlaced:              p.controlWardsPlaced || 0,
                     dragonTakedowns:                 p.dragonTakedowns || 0,
@@ -212,6 +210,7 @@ export async function getAnalysisData(req, res) {
     } catch (error) {
         console.error("[Analysis] getAnalysisData error:", error);
         const status = error.statusCode || 500;
-        return res.status(status).json({ error: error.message });
+        const message = status === 404 ? error.message : 'Failed to fetch analysis data';
+        return res.status(status).json({ error: message });
     }
 }

@@ -1,5 +1,4 @@
 import Profile from "../models/Profile.js";
-import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
 import { getBroadRegion } from "../utils/getBroadRegion.js";
 
@@ -8,7 +7,14 @@ const CACHE_TTL_MS = 30 * 60 * 1000;
 const backgroundFetching = new Set();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function fetchMissingDataBackground(workItems, broadRegion, apiKey, regionLower, region) {
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of cache) {
+        if (now - entry.fetchedAt > CACHE_TTL_MS) cache.delete(key);
+    }
+}, CACHE_TTL_MS);
+
+async function fetchMissingDataBackground(workItems, broadRegion, regionLower, region) {
     for (const { puuid, needsName, needsIcon, needsLevel } of workItems) {
         const dbPatch = {};
 
@@ -17,7 +23,7 @@ async function fetchMissingDataBackground(workItems, broadRegion, apiKey, region
             try {
                 console.log(`[Leaderboard] [API] account  ${puuid.slice(0, 8)}…`);
                 const res = await riotFetch(
-                    `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}?api_key=${apiKey}`
+                    `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-puuid/${puuid}`
                 );
                 if (res.ok) {
                     const { gameName = '', tagLine = '' } = await res.json();
@@ -36,7 +42,7 @@ async function fetchMissingDataBackground(workItems, broadRegion, apiKey, region
             try {
                 console.log(`[Leaderboard] [API] summoner ${puuid.slice(0, 8)}…`);
                 const res = await riotFetch(
-                    `https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`
+                    `https://${regionLower}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
                 );
                 if (res.ok) {
                     const { profileIconId, summonerLevel } = await res.json();
@@ -83,12 +89,11 @@ export async function getLeaderboard(req, res) {
         }
 
         const broadRegion = getBroadRegion(region);
-        const apiKey = getApiKey();
         const regionLower = region.toLowerCase();
 
         console.log(`[Leaderboard] [API] challenger list ${region}`);
         const listRes = await riotFetch(
-            `https://${regionLower}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${apiKey}`
+            `https://${regionLower}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5`
         );
         if (!listRes.ok) throw new Error(`Riot API error (challenger): ${listRes.status}`);
         const list = await listRes.json();
@@ -145,12 +150,14 @@ export async function getLeaderboard(req, res) {
         if (workItems.length > 0 && !backgroundFetching.has(region)) {
             backgroundFetching.add(region);
             console.log(`[Leaderboard] background starting — ${workItems.length} players for ${region}`);
-            fetchMissingDataBackground(workItems, broadRegion, apiKey, regionLower, region);
+            fetchMissingDataBackground(workItems, broadRegion, regionLower, region)
+                .catch(e => console.error('[Leaderboard] background error:', e.message));
         }
 
     } catch (error) {
         console.error("[Leaderboard] error:", error);
         const status = error.statusCode || 500;
-        return res.status(status).json({ error: error.message });
+        const message = status === 404 ? error.message : 'Failed to fetch leaderboard';
+        return res.status(status).json({ error: message });
     }
 }

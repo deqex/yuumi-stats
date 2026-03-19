@@ -1,18 +1,18 @@
 import Profile from "../models/Profile.js";
 import { getCachedPuuid } from "../utils/getPuuid.js";
-import { getApiKey } from "../utils/getApiKey.js";
 import { riotFetch } from "../utils/riotFetch.js";
+import { isValidRegion } from "../utils/getBroadRegion.js";
 
 
 async function fetchSummoner(puuid, region) {
-    const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${getApiKey()}`;
+    const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`;
     const res = await riotFetch(url);
     if (!res.ok) throw new Error(`Riot API error (summoner): ${res.status}`);
     return await res.json();
 }
 
 async function fetchRanks(puuid, region) {
-    const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}?api_key=${getApiKey()}`;
+    const url = `https://${region.toLowerCase()}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`;
     const res = await riotFetch(url);
     if (!res.ok) throw new Error(`Riot API error (ranks): ${res.status}`);
     return await res.json();
@@ -57,10 +57,13 @@ export async function getProfile(req, res) {
         if (!summonerName || !summonerTag || !region) {
             return res.status(400).json({ error: "summonerName, summonerTag, and region are required" });
         }
+        if (!isValidRegion(region)) {
+            return res.status(400).json({ error: "Invalid region" });
+        }
 
         const fullName = `${summonerName}#${summonerTag}`;
 
-        if (forceUpdate !== 'true') {
+        if (forceUpdate !== 'true' || !req.userId) {
             const cached = await Profile.findOne({ summonerName: fullName });
             if (cached) {
                 console.log(`[DB] profile for ${fullName}`);
@@ -99,15 +102,21 @@ export async function getProfile(req, res) {
     } catch (error) {
         console.error("getProfile error:", error);
         const status = error.statusCode || 500;
-        return res.status(status).json({ error: error.message });
+        const message = status === 404 ? error.message : 'Failed to fetch profile';
+        return res.status(status).json({ error: message });
     }
 }
+
+const PUUID_RE = /^[a-zA-Z0-9_-]{42,128}$/;
 
 export async function getStoredProfile(req, res) {
     try {
         const { puuid } = req.params;
         if (!puuid) {
             return res.status(400).json({ error: "puuid is required" });
+        }
+        if (!PUUID_RE.test(puuid)) {
+            return res.status(400).json({ error: "Invalid puuid format" });
         }
 
         const profile = await Profile.findOne({ puuid });
@@ -118,6 +127,6 @@ export async function getStoredProfile(req, res) {
         return res.json(profile);
     } catch (error) {
         console.error("getStoredProfile error:", error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Failed to fetch stored profile' });
     }
 }

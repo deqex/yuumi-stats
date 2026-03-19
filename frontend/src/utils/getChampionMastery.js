@@ -2,21 +2,28 @@ import { toast } from './toast';
 
 const API_BASE = '/api/mastery';
 
-export async function getChampionMastery(summonerName, summonerTag, region, forceUpdate = false) {
+export async function getChampionMastery(summonerName, summonerTag, region, forceUpdate = false, ddVersion = '16.5.1') {
     try {
         const params = new URLSearchParams({ summonerName, summonerTag, region });
         if (forceUpdate) params.set('forceUpdate', 'true');
-        const res = await fetch(`${API_BASE}/champion-mastery?${params}`);
+        const headers = {};
+        const token = localStorage.getItem('token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`${API_BASE}/champion-mastery?${params}`, { headers });
         if (res.status === 429) {
             toast.warn('Too many requests — slow down a bit.');
             return [];
         }
         if (!res.ok) throw new Error('Failed to fetch champion mastery');
-        const champs = await res.json();
+        const json = await res.json();
+        const champs = json.champions ?? json;
+        const lastUpdated = json.lastUpdated ? new Date(json.lastUpdated) : null;
 
-        const championData = await import('../utils/DDragon/champion.json'); //swap to use api end point instead of a local file
+        const champRes = await fetch(`https://ddragon.leagueoflegends.com/cdn/${ddVersion}/data/en_US/champion.json`);
+        if (!champRes.ok) throw new Error('Failed to fetch champion data');
+        const championData = await champRes.json();
         const keyToChamp = {};
-        Object.values(championData.default.data).forEach(champ => {
+        Object.values(championData.data).forEach(champ => {
             keyToChamp[champ.key] = {
                 name: champ.name,
                 id: champ.id,
@@ -24,8 +31,8 @@ export async function getChampionMastery(summonerName, summonerTag, region, forc
                 tags: champ.tags,
             };
         });
-        
-        return champs.map(champ => {
+
+        const champions = champs.map(champ => {
             const info = keyToChamp[champ.championId] || {};
             return {
                 ...champ,
@@ -35,11 +42,12 @@ export async function getChampionMastery(summonerName, summonerTag, region, forc
                 tags: info.tags || [],
             };
         });
+        return { champions, lastUpdated };
 
     } catch (error) {
         console.error('Error:', error);
         toast.error('Failed to load champion mastery. Please try again.');
-        return [];
+        return { champions: [], lastUpdated: null };
     }
 }
 

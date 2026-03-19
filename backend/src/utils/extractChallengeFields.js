@@ -1,0 +1,25 @@
+export function extractChallengeFields(rawP) {
+    return {
+        controlWardsPlaced:                  rawP.challenges?.controlWardsPlaced ?? 0,
+        epicMonsterSteals:                   rawP.challenges?.epicMonsterSteals ?? 0,
+        flawlessAces:                        rawP.challenges?.flawlessAces ?? 0,
+        hadOpenNexus:                        rawP.challenges?.hadOpenNexus ?? 0,
+        perfectGame:                         rawP.challenges?.perfectGame ?? 0,
+        takedownsInEnemyFountain:            rawP.challenges?.takedownsInEnemyFountain ?? 0,
+        earliestBaron:                       rawP.challenges?.earliestBaron ?? 0,
+        elderDragonKillsWithOpposingSoul:    rawP.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
+        dancedWithRiftHerald:                rawP.challenges?.dancedWithRiftHerald ?? 0,
+        healFromMapSources:                  rawP.challenges?.healFromMapSources ?? 0,
+        dragonTakedowns:                     rawP.challenges?.dragonTakedowns ?? 0,
+        scuttleCrabKills:                    rawP.challenges?.scuttleCrabKills ?? 0,
+        stealthWardsPlaced:                  rawP.challenges?.stealthWardsPlaced ?? 0,
+        wardTakedowns:                       rawP.challenges?.wardTakedowns ?? 0,
+        killsNearEnemyTurret:                rawP.challenges?.killsNearEnemyTurret ?? 0,
+        maxCsAdvantageOnLaneOpponent:        rawP.challenges?.maxCsAdvantageOnLaneOpponent ?? 0,
+        takedownsAfterGainingLevelAdvantage: rawP.challenges?.takedownsAfterGainingLevelAdvantage ?? 0,
+        takedownsBeforeJungleMinionSpawn:    rawP.challenges?.takedownsBeforeJungleMinionSpawn ?? 0,
+        abilityUses:                         rawP.challenges?.abilityUses ?? 0,
+        killParticipation:                   rawP.challenges?.killParticipation ?? 0,
+        kda:                                 rawP.challenges?.kda ?? 0,
+    };
+}

@@ -7,7 +7,7 @@ export default function SearchBar({
   setSummonerTag,
   handleSearch,
 }) {
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
@@ -22,7 +22,7 @@ export default function SearchBar({
           className="search-input"
           value={summonerName}
           onChange={(e) => setSummonerName(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           style={{ flex: 1 }}
         />
         <span style={{ fontSize: '1.4rem', fontWeight: 600, color: '#b39ddb', lineHeight: 1, userSelect: 'none', flexShrink: 0 }}>#</span>
@@ -32,7 +32,7 @@ export default function SearchBar({
           className="search-input"
           value={summonerTag}
           onChange={(e) => setSummonerTag(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           style={{ width: '40px', flexShrink: 0 }}
         />
       </div>

@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
 export const optionalAuth = (req, res, next) => {
+  const JWT_SECRET = process.env.JWT_SECRET;
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ') && JWT_SECRET) {
     try {
@@ -10,7 +9,6 @@ export const optionalAuth = (req, res, next) => {
       req.userId = decoded.id;
       req.username = decoded.username;
     } catch {
-      
     }
   }
   next();

@@ -140,6 +140,9 @@ body {
   cursor: pointer;
   transition: opacity 0.2s, transform 0.1s;
   width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .update-button:hover {
@@ -154,6 +157,14 @@ body {
 .update-button.updating {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@keyframes spin-icon {
+  to { transform: rotate(360deg); }
+}
+
+.update-button .spin {
+  animation: spin-icon 0.7s linear infinite;
 }
 
 .player-ranks {
@@ -592,16 +603,6 @@ body {
 
 .result-duration {
   color: #cbd5e1;
-}
-
-.game-champion-status {
-  display: none;
-}
-
-
-.champion-status-badge {
-  color: #FBBF24;
-  font-weight: 600;
 }
 
 /* Runes Section (stacked like summoners) */

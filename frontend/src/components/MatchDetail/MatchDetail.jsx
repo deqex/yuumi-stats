@@ -3,60 +3,9 @@ import './MatchDetail.css';
 import { getRankByPuuid } from '../../utils/getRankByPuuid';
 import { getRankColor } from '../../utils/getRankColor';
 import { useDDragon } from '../../context/DDragonContext';
-
-import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
-import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
-import SorceryTreeIcon from '../../utils/DDragon/runes/7202_Sorcery.png';
-import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
-import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
-
-
-
-const DD_RUNE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/img';
-
-const SUMMONER_SPELLS = {
-  1: 'SummonerBoost',
-  3: 'SummonerExhaust',
-  4: 'SummonerFlash',
-  6: 'SummonerHaste',
-  7: 'SummonerHeal',
-  11: 'SummonerSmite',
-  12: 'SummonerTeleport',
-  13: 'SummonerMana',
-  14: 'SummonerDot',
-  21: 'SummonerBarrier',
-  32: 'SummonerSnowball',
-};
-
-const RUNE_ICONS = {
-  8005: 'perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png',
-  8008: 'perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png',
-  8010: 'perk-images/Styles/Precision/Conqueror/Conqueror.png',
-  8021: 'perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png',
-  8112: 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
-  8124: 'perk-images/Styles/Domination/Predator/Predator.png',
-  8128: 'perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png',
-  9923: 'perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png',
-  8214: 'perk-images/Styles/Sorcery/SummonAery/SummonAery.png',
-  8229: 'perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png',
-  8230: 'perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png',
-  8437: 'perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png',
-  8439: 'perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png',
-  8465: 'perk-images/Styles/Resolve/Guardian/Guardian.png',
-  8351: 'perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png',
-  8360: 'perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png',
-  8369: 'perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png',
-};
-
-const RUNE_TREE_ICONS = {
-  8000: PrecisionTreeIcon,
-  8100: DominationTreeIcon,
-  8200: SorceryTreeIcon,
-  8300: InspirationTreeIcon,
-  8400: ResolveTreeIcon,
-};
-
-const ROMAN_TO_NUM = { I: '1', II: '2', III: '3', IV: '4' };
+import {
+  DD_RUNE_ICON_BASE, SUMMONER_SPELLS, RUNE_ICONS, RUNE_TREE_ICONS, ROMAN_TO_NUM,
+} from '../../utils/gameConstants';
 
 function titleCase(str) {
   if (!str) return '';
@@ -190,10 +139,6 @@ export default function MatchDetail({ match, focusName, region }) {
 
 
 
-  const BOOTS_ITEM_IDS = new Set([
-    1001, 3006, 3009, 3020, 3047, 3111, 3117, 3158,
-  ]);
-
   const renderPlayerRow = (p) => {
     const isFocus = (p?.name || '').toLowerCase() === focusLower;
     const dmg = p?.totalDamageDealtToChampions ?? 0;
@@ -211,19 +156,8 @@ export default function MatchDetail({ match, focusName, region }) {
 
     // Lane / role detection
     const lanePos = (p.individualPosition || '').toUpperCase();
-    const isSupport = lanePos === 'UTILITY';
-    const isJungle = lanePos === 'JUNGLE';
-    const isTop = lanePos === 'TOP';
-    const isMid = lanePos === 'MIDDLE';
-    const isADC = lanePos === 'BOTTOM' && !isSupport;
-
-    const isBootsItem = (id) => id && BOOTS_ITEM_IDS.has(id);
-
 
     const questIdForRole = p.roleBoundItem || p.roleQuestId || 0;
-
-
-    const adcBootsItem = isADC ? (items.find(id => isBootsItem(id)) || 0) : 0;
 
     // Runes
     const primaryStyle = p?.perks?.styles?.find(s => s.description === 'primaryStyle') || p?.perks?.styles?.[0];

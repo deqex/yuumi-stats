@@ -2,6 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext({ user: null, login: () => {}, logout: () => {}, updateLeagueName: () => {} });
 
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
@@ -9,8 +18,12 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
     const leagueName = localStorage.getItem('leagueName');
-    if (token && username) {
+    if (token && username && !isTokenExpired(token)) {
       setUser({ token, username, leagueName: leagueName || '' });
+    } else if (token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('leagueName');
     }
   }, []);
 

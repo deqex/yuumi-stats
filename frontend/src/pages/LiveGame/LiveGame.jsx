@@ -6,66 +6,14 @@ import './LiveGame.css';
 import { Navbar } from '../../components';
 import { getLiveGame } from '../../utils/getLiveGame';
 import { getParticipantStats } from '../../utils/getParticipantStats';
-import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
-import PrecisionTreeIcon  from '../../utils/DDragon/runes/7201_Precision.png';
-import SorceryTreeIcon    from '../../utils/DDragon/runes/7202_Sorcery.png';
-import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
-import ResolveTreeIcon    from '../../utils/DDragon/runes/7204_Resolve.png';
-import RankIron       from '../../utils/DDragon/ranks/Rank=Iron.png';
-import RankBronze     from '../../utils/DDragon/ranks/Rank=Bronze.png';
-import RankSilver     from '../../utils/DDragon/ranks/Rank=Silver.png';
-import RankGold       from '../../utils/DDragon/ranks/Rank=Gold.png';
-import RankPlatinum   from '../../utils/DDragon/ranks/Rank=Platinum.png';
-import RankEmerald    from '../../utils/DDragon/ranks/Rank=Emerald.png';
-import RankDiamond    from '../../utils/DDragon/ranks/Rank=Diamond.png';
-import RankMaster     from '../../utils/DDragon/ranks/Rank=Master.png';
-import RankGrandmaster from '../../utils/DDragon/ranks/Rank=Grandmaster.png';
-import RankChallenger from '../../utils/DDragon/ranks/Rank=Challenger.png';
-
-const DD_RUNE_ICON_BASE     = `https://ddragon.leagueoflegends.com/cdn/img`;
+import {
+  DD_RUNE_ICON_BASE, SUMMONER_SPELLS, RUNE_ICONS, RUNE_TREE_ICONS,
+  RANK_ICON_MAP, ROMAN_TO_NUM,
+} from '../../utils/gameConstants';
 
 const MAP_NAMES = { 11: "Summoner's Rift", 12: 'Howling Abyss' };
 
-const RANK_ICON_MAP = {
-  IRON: RankIron, BRONZE: RankBronze, SILVER: RankSilver,
-  GOLD: RankGold, PLATINUM: RankPlatinum, EMERALD: RankEmerald,
-  DIAMOND: RankDiamond, MASTER: RankMaster, GRANDMASTER: RankGrandmaster,
-  CHALLENGER: RankChallenger,
-};
-
-const ROMAN_TO_NUM = { I: '1', II: '2', III: '3', IV: '4' };
-
-const SUMMONER_SPELLS = {
-  1: 'SummonerBoost', 3: 'SummonerExhaust', 4: 'SummonerFlash',
-  6: 'SummonerHaste', 7: 'SummonerHeal',    11: 'SummonerSmite',
-  12: 'SummonerTeleport', 13: 'SummonerMana', 14: 'SummonerDot',
-  21: 'SummonerBarrier', 32: 'SummonerSnowball',
-};
-
-const RUNE_ICONS = {
-  8005: 'perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png',
-  8008: 'perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png',
-  8010: 'perk-images/Styles/Precision/Conqueror/Conqueror.png',
-  8021: 'perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png',
-  8112: 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
-  8124: 'perk-images/Styles/Domination/Predator/Predator.png',
-  8128: 'perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png',
-  9923: 'perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png',
-  8214: 'perk-images/Styles/Sorcery/SummonAery/SummonAery.png',
-  8229: 'perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png',
-  8230: 'perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png',
-  8437: 'perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png',
-  8439: 'perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png',
-  8465: 'perk-images/Styles/Resolve/Guardian/Guardian.png',
-  8351: 'perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png',
-  8360: 'perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png',
-  8369: 'perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png',
-};
-
-const RUNE_TREE_ICONS = {
-  8000: PrecisionTreeIcon, 8100: DominationTreeIcon, 8200: SorceryTreeIcon,
-  8300: InspirationTreeIcon, 8400: ResolveTreeIcon,
-};
+const SHAME_BADGES = new Set(['Struggled', 'Blind', 'No control wards', 'Struggling', 'Cold Streak', 'Reckless']);
 
 const TIER_OFFSET = { IRON: 0, BRONZE: 4, SILVER: 8, GOLD: 12, PLATINUM: 16, EMERALD: 20, DIAMOND: 24 };
 const DIV_SCORE   = { IV: 1, III: 2, II: 3, I: 4 };
@@ -250,7 +198,7 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
               </div>
               <div className="lg-stat-cell">
                 <span className="lg-stat-lbl">CS/MIN</span>
-                <span className="lg-stat-val">{s.csPerMin}</span>
+                <span className="lg-stat-val">{s.csPerMin ?? '—'}</span>
               </div>
               <div className="lg-stat-cell">
                 <span className="lg-stat-lbl">KP</span>
@@ -269,15 +217,25 @@ function PlayerCard({ participant, isFocused, championMap, statsData }) {
         )}
       </div>
 
-      <div className="lg-card-badges" />
+      {statsData?.badges?.length > 0 && (
+        <div className="lg-card-badges">
+          {statsData.badges.map(({ badge, description, count }) => (
+            <span
+              key={badge}
+              className={`lg-badge-chip${SHAME_BADGES.has(badge) ? ' lg-badge-shame' : ''}`}
+              title={`${description} (${count}×)`}
+            >
+              {badge}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 export default function LiveGame() {
   const ddVersion = useDDragon();
-  const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
-  const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
   const [gameData, setGameData]         = useState(null);
   const [notInGame, setNotInGame]       = useState(false);
   const [loading, setLoading]           = useState(true);
@@ -293,7 +251,9 @@ export default function LiveGame() {
 
   useEffect(() => {
     if (params.region && params.nameTag) {
-      const [name, tag] = params.nameTag.split('-');
+      const lastDash = params.nameTag.lastIndexOf('-');
+      const name = lastDash > 0 ? params.nameTag.slice(0, lastDash) : params.nameTag;
+      const tag = lastDash > 0 ? params.nameTag.slice(lastDash + 1) : '';
       setRegion(params.region);
       setSummonerName(name || '');
       setSummonerTag(tag || '');
@@ -316,7 +276,7 @@ export default function LiveGame() {
   }, []);
 
   useEffect(() => {
-    fetch(`https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}/data/en_US/champion.json`)
+    fetch(`https://ddragon.leagueoflegends.com/cdn/${ddVersion}/data/en_US/champion.json`)
       .then(r => r.json())
       .then(data => {
         const map = {};
@@ -362,8 +322,26 @@ export default function LiveGame() {
   }, [gameData?.gameStartTime]);
 
   const minutesElapsed = Math.floor(elapsed / 60);
-  const blueTeam = gameData?.participants?.filter(p => p.teamId === 100) || [];
-  const redTeam  = gameData?.participants?.filter(p => p.teamId === 200) || [];
+  const POSITION_ORDER = { TOP: 0, JUNGLE: 1, MIDDLE: 2, BOTTOM: 3, UTILITY: 4 };
+
+  const participants = gameData?.participants || [];
+
+  function sortTeam(team) {
+    const jungler = team.find(p => p.spell1Id === 11 || p.spell2Id === 11);
+    const others = team.filter(p => p !== jungler);
+
+    others.sort((a, b) => {
+      const roleA = POSITION_ORDER[statsMap[a.puuid]?.primaryPosition] ?? 5;
+      const roleB = POSITION_ORDER[statsMap[b.puuid]?.primaryPosition] ?? 5;
+      return roleA - roleB;
+    });
+
+    if (jungler) others.splice(1, 0, jungler);
+    return others;
+  }
+
+  const blueTeam = sortTeam(participants.filter(p => p.teamId === 100));
+  const redTeam  = sortTeam(participants.filter(p => p.teamId === 200));
 
   const isFocused = p => {
     const [n] = (p.riotId || '').split('#');
@@ -421,7 +399,7 @@ export default function LiveGame() {
               <span className="lg-info-sep">|</span>
               <span>Match started {minutesElapsed} minute{minutesElapsed !== 1 ? 's' : ''} ago</span>
             </div>
-            <div className="lg-stats-note">Showing stats for last 7 Ranked Solo/Duo games</div>
+            <div className="lg-stats-note">Showing stats and badges for last 10 games</div>
 
             <div className="lg-team-section">
               <div className="lg-team-header">

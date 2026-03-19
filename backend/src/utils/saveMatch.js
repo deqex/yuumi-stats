@@ -5,9 +5,6 @@ export async function saveMatchToDb(matchData, region) {
         const { metadata, info } = matchData;
         if (!metadata?.matchId || !info?.participants) return;
 
-        const exists = await Match.exists({ matchId: metadata.matchId });
-        if (exists) return;
-
         const season = new Date(info.gameCreation).getFullYear() - 2010;
 
         const participantSummaries = info.participants.map((p) => ({
@@ -17,6 +14,7 @@ export async function saveMatchToDb(matchData, region) {
             championId:                         p.championId,
             championName:                       p.championName,
             teamId:                             p.teamId,
+            teamPosition:                       p.teamPosition ?? '',
             individualPosition:                 p.individualPosition ?? '',
             roleQuestId:                        p.roleBoundItem ?? null,
             win:                                p.win,
@@ -42,6 +40,7 @@ export async function saveMatchToDb(matchData, region) {
             firstBloodKill:                     p.firstBloodKill ?? false,
             firstBloodAssist:                   p.firstBloodAssist ?? false,
             largestMultiKill:                   p.largestMultiKill ?? 0,
+            largestKillingSpree:                p.largestKillingSpree ?? 0,
             objectivesStolen:                   p.objectivesStolen ?? 0,
             controlWardsPlaced:                 p.challenges?.controlWardsPlaced ?? 0,
             damageDealtToTurrets:               p.damageDealtToTurrets ?? 0,
@@ -57,7 +56,7 @@ export async function saveMatchToDb(matchData, region) {
             earliestBaron:                      p.challenges?.earliestBaron ?? 0,
             elderDragonKillsWithOpposingSoul:   p.challenges?.elderDragonKillsWithOpposingSoul ?? 0,
             dancedWithRiftHerald:               p.challenges?.dancedWithRiftHerald ?? 0,
-            healFromMapSources:                 p.challenges?.HealFromMapSources ?? 0,
+            healFromMapSources:                 p.challenges?.healFromMapSources ?? 0,
             dragonTakedowns:                    p.challenges?.dragonTakedowns ?? 0,
             scuttleCrabKills:                   p.challenges?.scuttleCrabKills ?? 0,
             stealthWardsPlaced:                 p.challenges?.stealthWardsPlaced ?? 0,

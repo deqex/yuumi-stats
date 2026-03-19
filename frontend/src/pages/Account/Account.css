@@ -171,3 +171,88 @@ body { margin: 0; background: #f7f5fa; }
 .account-logout:hover {
   background: #faf5ff;
 }
+
+.account-delete {
+  width: 100%;
+  margin-top: 10px;
+  background: transparent;
+  border: 1.5px solid #fecaca;
+  border-radius: 10px;
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #dc2626;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  font-family: 'Lexend', sans-serif;
+}
+
+.account-delete:hover {
+  background: #fef2f2;
+}
+
+.account-delete-confirm {
+  margin-top: 10px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.account-delete-confirm p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.account-delete-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.account-delete-confirm-yes {
+  flex: 1;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Lexend', sans-serif;
+  transition: opacity 0.18s;
+}
+
+.account-delete-confirm-yes:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.account-delete-confirm-yes:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.account-delete-confirm-cancel {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid #fecaca;
+  border-radius: 8px;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  cursor: pointer;
+  font-family: 'Lexend', sans-serif;
+  transition: background 0.18s;
+}
+
+.account-delete-confirm-cancel:hover:not(:disabled) {
+  background: #fff;
+}
+
+.account-delete-confirm-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

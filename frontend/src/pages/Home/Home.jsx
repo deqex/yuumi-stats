@@ -18,7 +18,7 @@ export default function Home() {
 
   const handleSearch = () => {
     if (!summonerName || !summonerTag) return;
-    navigate(`/profile/${region}/${summonerName}-${summonerTag}/overview`);
+    navigate(`/profile/${encodeURIComponent(region)}/${encodeURIComponent(summonerName)}-${encodeURIComponent(summonerTag)}/overview`);
   };
 
   return (

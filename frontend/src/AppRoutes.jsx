@@ -10,6 +10,7 @@ import Login from "./pages/Login/Login";
 import Account from "./pages/Account/Account";
 import Groups from "./pages/Group/Groups";
 import Group from "./pages/Group/Group";
+import NotFound from "./pages/NotFound/NotFound";
 import { AuthProvider } from "./context/AuthContext";
 
 
@@ -33,6 +34,7 @@ export default function AppRoutes() {
                         <Route path="/account" element={<Account />} />
                         <Route path="/groups" element={<Groups />} />
                         <Route path="/groups/:groupId" element={<Group />} />
+                        <Route path="*" element={<NotFound />} />
                     </Routes>
                 </AuthProvider>
                 <Toast />

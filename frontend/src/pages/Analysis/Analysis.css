@@ -180,6 +180,9 @@
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .analysis-update-btn:hover {
   background: #6D28D9;
@@ -746,6 +749,94 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.profile-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: white;
+  border: 1.5px solid #EDE9F8;
+  border-radius: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  cursor: default;
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.profile-badge-chip:hover {
+  border-color: #A78BFA;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.1);
+}
+
+.profile-badge-chip.shame {
+  border-color: #FECACA;
+  background: #FFF8F8;
+}
+
+.profile-badge-chip.shame:hover {
+  border-color: #F87171;
+  box-shadow: 0 4px 14px rgba(248, 113, 113, 0.12);
+}
+
+.profile-badge-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.profile-badge-chip.shame .profile-badge-label {
+  color: #B45309;
+}
+
+.profile-badge-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #A78BFA;
+  background: #F3F0FA;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.profile-badge-chip.shame .profile-badge-count {
+  color: #EF4444;
+  background: #FEE2E2;
+}
+
+.profile-badge-chip[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1F2937;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.profile-badge-chip[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1F2937;
+  z-index: 100;
 }
 
 /* ── Responsive ── */

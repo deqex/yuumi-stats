@@ -14,4 +14,6 @@ const groupSchema = new mongoose.Schema({
   members:       [memberSchema],
 }, { timestamps: true, collection: 'groups' });
 
+groupSchema.index({ owner: 1 });
+
 export default mongoose.model('Group', groupSchema);

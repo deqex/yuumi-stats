@@ -9,7 +9,7 @@ const matchSchema = new mongoose.Schema({
   region: { 
     type: String, 
     required: true,
-    enum: ['EUN1', 'EUW1', 'NA1', 'KR', 'BR1', 'JP1', 'RU', 'OC1', 'TR1', 'LA1', 'LA2']
+    enum: ['EUN1', 'EUW1', 'NA1', 'KR', 'BR1', 'JP1', 'RU', 'OC1', 'TR1', 'LA1', 'LA2', 'ME1', 'SG2', 'TW2', 'VN2']
   },
   gameCreation: { 
     type: Date, 
@@ -37,6 +37,7 @@ const matchSchema = new mongoose.Schema({
     championId: { type: Number, required: true },
     championName: { type: String, required: true },
     teamId: { type: Number, required: true },
+    teamPosition: { type: String, default: '' },
     individualPosition: { type: String, default: '' },
     roleQuestId: { type: Number, default: null },
     win: { type: Boolean, required: true },
@@ -62,6 +63,7 @@ const matchSchema = new mongoose.Schema({
     firstBloodKill: { type: Boolean, default: false },
     firstBloodAssist: { type: Boolean, default: false },
     largestMultiKill: { type: Number, default: 0 },
+    largestKillingSpree: { type: Number, default: 0 },
     objectivesStolen: { type: Number, default: 0 },
     // additional stats
     controlWardsPlaced: { type: Number, default: 0 },

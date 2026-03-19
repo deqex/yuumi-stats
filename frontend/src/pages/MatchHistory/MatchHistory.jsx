@@ -1,44 +1,19 @@
 import { useEffect, useState } from 'react';
+import { timeSince } from '../../utils/timeSince';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDDragon } from '../../context/DDragonContext';
 import './MatchHistory.css';
 import { Navbar } from '../../components';
-import DominationTreeIcon from '../../utils/DDragon/runes/7200_Domination.png';
-import PrecisionTreeIcon from '../../utils/DDragon/runes/7201_Precision.png';
-import SorceryTreeIcon from '../../utils/DDragon/runes/7202_Sorcery.png';
-import InspirationTreeIcon from '../../utils/DDragon/runes/7203_Whimsy.png';
-import ResolveTreeIcon from '../../utils/DDragon/runes/7204_Resolve.png';
-import RankIron from '../../utils/DDragon/ranks/Rank=Iron.png';
-import RankBronze from '../../utils/DDragon/ranks/Rank=Bronze.png';
-import RankSilver from '../../utils/DDragon/ranks/Rank=Silver.png';
-import RankGold from '../../utils/DDragon/ranks/Rank=Gold.png';
-import RankPlatinum from '../../utils/DDragon/ranks/Rank=Platinum.png';
-import RankEmerald from '../../utils/DDragon/ranks/Rank=Emerald.png';
-import RankDiamond from '../../utils/DDragon/ranks/Rank=Diamond.png';
-import RankMaster from '../../utils/DDragon/ranks/Rank=Master.png';
-import RankGrandmaster from '../../utils/DDragon/ranks/Rank=Grandmaster.png';
-import RankChallenger from '../../utils/DDragon/ranks/Rank=Challenger.png';
+import {
+  SUMMONER_SPELLS, RUNE_ICONS, RUNE_TREE_ICONS, RANK_ICON_MAP,
+  DD_RUNE_ICON_BASE,
+} from '../../utils/gameConstants';
 import { getMatchIds } from '../../utils/getMatchIds';
 import { getDataFromMatchId } from '../../utils/getDataFromMatchId';
 import dissectMatchData from '../../utils/dissectMatchData';
 import dissectGeneralMatchData from '../../utils/dissectGeneralMatchData';
-import { getSummoner } from '../../utils/getSummoner';
-import { getRanks } from '../../utils/getRanks';
 import { getProfile } from '../../utils/getProfile';
 import MatchDetail from '../../components/MatchDetail/MatchDetail';
-
-const RANK_ICON_MAP = {
-  IRON: RankIron,
-  BRONZE: RankBronze,
-  SILVER: RankSilver,
-  GOLD: RankGold,
-  PLATINUM: RankPlatinum,
-  EMERALD: RankEmerald,
-  DIAMOND: RankDiamond,
-  MASTER: RankMaster,
-  GRANDMASTER: RankGrandmaster,
-  CHALLENGER: RankChallenger,
-};
 
 const titleCaseTier = (tier) => {
   if (!tier) return '';
@@ -65,6 +40,7 @@ export default function MatchHistory() {
   const [rankEntries, setRankEntries] = useState([]);
   const [expandedMatchId, setExpandedMatchId] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [matchOffset, setMatchOffset] = useState(5);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -75,21 +51,28 @@ export default function MatchHistory() {
   const fetchMatches = async (name, tag, regionCode, forceUpdate = false) => {
     if (!name || !tag) return;
     try {
-      const matchIds = await getMatchIds(name, tag, regionCode, forceUpdate, 0, 5);
+      const { matchIds, lastApiCallAt } = await getMatchIds(name, tag, regionCode, forceUpdate, 0, 5);
+      const existingIds = forceUpdate ? new Set(matches.map(m => m.matchId)) : new Set();
+      const newIds = matchIds.filter(id => !existingIds.has(id));
       // Process sequentially to avoid hitting Riot API rate limits
-      const matchData = [];
-      for (const matchId of matchIds) {
+      const newMatchData = [];
+      for (const matchId of newIds) {
         try {
-          const data = await getDataFromMatchId(matchId, regionCode, forceUpdate);
+          const data = await getDataFromMatchId(matchId, regionCode, false);
           if (!data || !data.info) continue; // skip failed fetches
           const players = dissectMatchData(data);
           const gameInfo = dissectGeneralMatchData(data);
-          matchData.push({ matchId, players, gameInfo });
+          newMatchData.push({ matchId, players, gameInfo });
         } catch (e) {
           console.warn(`Skipping match ${matchId}:`, e);
         }
       }
-      setMatches(matchData);
+      if (forceUpdate) {
+        setMatches(prev => [...newMatchData, ...prev]);
+      } else {
+        setMatches(newMatchData);
+      }
+      if (lastApiCallAt) setLastUpdated(lastApiCallAt);
       setMatchOffset(5);
       setHasMore(true);
     } catch (error) {
@@ -105,7 +88,7 @@ export default function MatchHistory() {
     try {
       const currentOffset = matchOffset;
       const queueFilter = TAB_QUEUE_MAP[activeTab] ?? null;
-      const newMatchIds = await getMatchIds(summonerName, summonerTag, region, false, currentOffset, 20, queueFilter);
+      const { matchIds: newMatchIds } = await getMatchIds(summonerName, summonerTag, region, false, currentOffset, 20, queueFilter);
       if (newMatchIds.length === 0) {
         setHasMore(false);
         return;
@@ -154,7 +137,9 @@ export default function MatchHistory() {
 
   useEffect(() => {
     if (params.region && params.nameTag) {
-      const [name, tag] = params.nameTag.split('-');
+      const lastDash = params.nameTag.lastIndexOf('-');
+      const name = lastDash > 0 ? params.nameTag.slice(0, lastDash) : params.nameTag;
+      const tag = lastDash > 0 ? params.nameTag.slice(lastDash + 1) : '';
       setRegion(params.region);
       setSummonerName(name || '');
       setSummonerTag(tag || '');
@@ -269,7 +254,6 @@ export default function MatchHistory() {
   const DD_CHAMPION_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/champion`;
   const DD_ITEM_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/item`;
   const DD_SUMMONER_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/spell`;
-  const DD_RUNE_ICON_BASE = 'https://ddragon.leagueoflegends.com/cdn/img';
   const DD_PROFILE_ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img/profileicon`;
 
   const profileIconId = summonerData?.profileIconId ?? 588;
@@ -281,54 +265,6 @@ export default function MatchHistory() {
   const getRankIcon = (entry) => {
     if (!entry?.tier) return null;
     return RANK_ICON_MAP[entry.tier.toUpperCase()] || null;
-  };
-  const soloRankIcon = getRankIcon(soloRank);
-
-  const SUMMONER_SPELLS = {
-    1: 'SummonerBoost',       // Cleanse
-    3: 'SummonerExhaust',
-    4: 'SummonerFlash',
-    6: 'SummonerHaste',       // Ghost
-    7: 'SummonerHeal',
-    11: 'SummonerSmite',
-    12: 'SummonerTeleport',
-    13: 'SummonerMana',       // Clarity
-    14: 'SummonerDot',        // Ignite
-    21: 'SummonerBarrier',
-    32: 'SummonerSnowball',
-  };
-
-  const RUNE_ICONS = {
-    // Precision keystones
-    8005: 'perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png',
-    8008: 'perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png',
-    8010: 'perk-images/Styles/Precision/Conqueror/Conqueror.png',
-    8021: 'perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png',
-    // Domination keystones
-    8112: 'perk-images/Styles/Domination/Electrocute/Electrocute.png',
-    8124: 'perk-images/Styles/Domination/Predator/Predator.png',
-    8128: 'perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png',
-    9923: 'perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png',
-    // Sorcery keystones
-    8214: 'perk-images/Styles/Sorcery/SummonAery/SummonAery.png',
-    8229: 'perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png',
-    8230: 'perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png',
-    // Resolve keystones
-    8437: 'perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png',
-    8439: 'perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png',
-    8465: 'perk-images/Styles/Resolve/Guardian/Guardian.png',
-    // Inspiration keystones
-    8351: 'perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png',
-    8360: 'perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png',
-    8369: 'perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png',
-  };
-
-  const RUNE_TREE_ICONS = {
-    8000: PrecisionTreeIcon,
-    8100: DominationTreeIcon,
-    8200: SorceryTreeIcon,
-    8300: InspirationTreeIcon,
-    8400: ResolveTreeIcon,
   };
 
   const BADGE_DESCRIPTIONS = {
@@ -388,18 +324,6 @@ export default function MatchHistory() {
       }
     };
 
-    // Debug: log focus detection values so we can verify matching in the browser console
-    try {
-      // eslint-disable-next-line no-console
-      console.debug('MatchHistory focus check', {
-        summonerName,
-        normalizedSummoner: normalize(summonerName),
-        players: players.map(p => ({ name: p?.name, normalized: normalize(p?.name) }))
-      });
-    } catch (err) {
-      // silent
-    }
-    
     if (!focusPlayer) return null;
 
     const blueTeam = players.filter(p => p.teamId === 100);
@@ -410,14 +334,6 @@ export default function MatchHistory() {
       return name.substring(0, 1).toUpperCase();
     };
 
-    const getChampionStatus = (level) => {
-      if (level >= 18) return 'Legendary';
-      if (level >= 15) return 'Godlike';
-      if (level >= 12) return 'Favorable';
-      return 'Normal';
-    };
-
-    const kda = focusPlayer.kills + focusPlayer.deaths + focusPlayer.assists;
     const kdaRatio = focusPlayer.deaths > 0
       ? (focusPlayer.kills + focusPlayer.assists) / focusPlayer.deaths
       : focusPlayer.kills + focusPlayer.assists;
@@ -817,8 +733,14 @@ export default function MatchHistory() {
                 onClick={handleUpdate}
                 disabled={isUpdating}
               >
+                <svg className={isUpdating ? 'spin' : ''} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
                 {isUpdating ? 'Updating...' : 'Update'}
               </button>
+              {lastUpdated && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>Updated {timeSince(lastUpdated)}</div>}
               <div className="player-ranks">
                 {rankSections.map(({ label, entry }) => {
                   const iconSrc = getRankIcon(entry);

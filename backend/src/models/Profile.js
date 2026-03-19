@@ -37,6 +37,10 @@ const profileSchema = new mongoose.Schema({
     default: Date.now,
     index: true,
   },
+  lastMatchFetchAt: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: false, collection: "profiles" });
 
 const Profile = mongoose.model("Profile", profileSchema);

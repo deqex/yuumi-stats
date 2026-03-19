@@ -1,14 +1,47 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import './Account.css';
 
 export default function Account() {
   const { user, updateLeagueName, logout } = useAuth();
+  const navigate = useNavigate();
   const [leagueName, setLeagueName] = useState(user?.leagueName || '');
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${user?.token}` },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) {
+        let msg = 'Failed to delete account.';
+        try { msg = (await res.json()).message || msg; } catch {}
+        setError(msg);
+        setDeleting(false);
+        setDeleteConfirm(false);
+        return;
+      }
+      logout();
+      navigate('/');
+    } catch {
+      clearTimeout(timeout);
+      setError('Could not connect to server.');
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -84,6 +117,26 @@ export default function Account() {
             <button className="account-logout" onClick={logout}>
               Log out
             </button>
+          )}
+
+          {user && !deleteConfirm && (
+            <button className="account-delete" onClick={() => setDeleteConfirm(true)}>
+              Delete account
+            </button>
+          )}
+
+          {deleteConfirm && (
+            <div className="account-delete-confirm">
+              <p>Are you sure? This cannot be undone.</p>
+              <div className="account-delete-confirm-actions">
+                <button className="account-delete-confirm-yes" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Deleting...' : 'Yes, delete'}
+                </button>
+                <button className="account-delete-confirm-cancel" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

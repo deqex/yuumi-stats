@@ -1,12 +1,15 @@
 import { getBroadRegion } from "./getBroadRegion.js";
-import { getApiKey } from "./getApiKey.js";
 import { riotFetch } from "./riotFetch.js";
 import Profile from "../models/Profile.js";
 
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 async function fetchPuuid(summonerName, summonerTag, region) {
     const dbProfile = await Profile.findOne({
-        gameName: { $regex: new RegExp(`^${summonerName}$`, 'i') },
-        tagLine:  { $regex: new RegExp(`^${summonerTag}$`,  'i') },
+        gameName: { $regex: new RegExp(`^${escapeRegex(summonerName)}$`, 'i') },
+        tagLine:  { $regex: new RegExp(`^${escapeRegex(summonerTag)}$`,  'i') },
     }, 'puuid').lean();
     if (dbProfile?.puuid) {
         console.log(`[PUUID] DB hit for ${summonerName}#${summonerTag}`);
@@ -14,7 +17,7 @@ async function fetchPuuid(summonerName, summonerTag, region) {
     }
 
     const broadRegion = getBroadRegion(region);
-    const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}?api_key=${getApiKey()}`;
+    const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}`;
     const res = await riotFetch(url);
     if (res.status === 404) {
         const err = new Error(`Player "${summonerName}#${summonerTag}" not found`);
@@ -29,6 +32,7 @@ async function fetchPuuid(summonerName, summonerTag, region) {
 const puuidCache    = new Map();
 const puuidInflight = new Map();
 const PUUID_TTL     = 5 * 60 * 1000;
+const MAX_PUUID_CACHE = 2000;
 
 export function getCachedPuuid(summonerName, summonerTag, region) {
     const key = `${summonerName.toLowerCase()}#${summonerTag.toLowerCase()}@${region.toLowerCase()}`;
@@ -36,7 +40,13 @@ export function getCachedPuuid(summonerName, summonerTag, region) {
     if (cached && Date.now() - cached.ts < PUUID_TTL) return Promise.resolve(cached.puuid);
     if (puuidInflight.has(key)) return puuidInflight.get(key);
     const promise = fetchPuuid(summonerName, summonerTag, region)
-        .then((puuid) => { puuidCache.set(key, { puuid, ts: Date.now() }); puuidInflight.delete(key); return puuid; })
+        .then((puuid) => {
+            if (puuidCache.size >= MAX_PUUID_CACHE) {
+                const oldest = puuidCache.keys().next().value;
+                puuidCache.delete(oldest);
+            }
+            puuidCache.set(key, { puuid, ts: Date.now() }); puuidInflight.delete(key); return puuid;
+        })
         .catch((err)  => { puuidInflight.delete(key); throw err; });
     puuidInflight.set(key, promise);
     return promise;
