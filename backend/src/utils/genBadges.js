@@ -57,18 +57,18 @@ export function genAggregateBadges(stats) {
     else if (avgAiScore <= 40) badges.push(badge('Struggling', 'Has been having a tough time recently', n));
 
     if (csPerMin != null) {
-        if (csPerMin >= 9.0)      badges.push(badge('CS God',      'Farming at an elite level', n));
-        else if (csPerMin >= 6.5) badges.push(badge('Good Farmer', 'Strong lasthitting across recent games', n));
-        else if (csPerMin <= 5)   badges.push(badge('Poor Farmer', 'Consistently low CS numbers', n));
+        if (csPerMin >= 9)      badges.push(badge('CS God',      'Farming at an elite level', n));
+        else if (csPerMin >= 7) badges.push(badge('Good Farmer', 'Strong lasthitting across recent games', n));
+        else if (csPerMin <= 5.5) badges.push(badge('Poor Farmer', 'Consistently low CS numbers', n));
     }
 
     if (winRate >= 70) badges.push(badge('Popping off', 'Winning most of their recent games', n));
     else if (winRate <= 40) badges.push(badge('Off form', 'Struggling to find wins lately', n));
 
     if (kda >= 4.0) badges.push(badge('Calculated', 'Averages high KDA', n));
-    if (avgKP >= 65) badges.push(badge('Active', 'Always involved when kills happen', n));
+    if (avgKP >= 60) badges.push(badge('Active', 'Always involved when kills happen', n));
 
-    if (avgDeaths <= 1.5) badges.push(badge('Careful', 'Consistently avoids dying', n));
+    if (avgDeaths <= 3.5) badges.push(badge('Careful', 'Consistently avoids dying', n));
     else if (avgDeaths >= 8) badges.push(badge('Reckless', 'Tends to die a lot', n));
 
     return badges;
