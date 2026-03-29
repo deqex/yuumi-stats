@@ -16,6 +16,7 @@ dotenv.config();
 dns.setServers(['1.1.1.1']);
 
 if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET not configured');
+if (!process.env.REFRESH_TOKEN_SECRET) throw new Error('REFRESH_TOKEN_SECRET not configured');
 if (!process.env.RIOT_API_KEY) throw new Error('RIOT_API_KEY not configured');
 if (!process.env.PORT) throw new Error('PORT not configured');
 if (!process.env.MONGO_URI) throw new Error('MONGO_URI not configured');

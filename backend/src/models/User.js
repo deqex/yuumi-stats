@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
     default: '',
     trim: true,
   },
+  refreshToken: {
+    type: String,
+    default: null,
+  },
 }, { timestamps: true, collection: 'users' });
 
 const User = mongoose.model('User', userSchema);

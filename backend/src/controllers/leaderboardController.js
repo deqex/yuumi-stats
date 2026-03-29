@@ -1,6 +1,6 @@
 import Profile from "../models/Profile.js";
 import { riotFetch } from "../utils/riotFetch.js";
-import { getBroadRegion } from "../utils/getBroadRegion.js";
+import { getBroadRegion, getPuuidRegion } from "../utils/getBroadRegion.js";
 
 const cache = new Map(); 
 const CACHE_TTL_MS = 30 * 60 * 1000; 
@@ -89,6 +89,7 @@ export async function getLeaderboard(req, res) {
         }
 
         const broadRegion = getBroadRegion(region);
+        const puuidRegion = getPuuidRegion(region);
         const regionLower = region.toLowerCase();
 
         console.log(`[Leaderboard] [API] challenger list ${region}`);
@@ -150,7 +151,7 @@ export async function getLeaderboard(req, res) {
         if (workItems.length > 0 && !backgroundFetching.has(region)) {
             backgroundFetching.add(region);
             console.log(`[Leaderboard] background starting — ${workItems.length} players for ${region}`);
-            fetchMissingDataBackground(workItems, broadRegion, regionLower, region)
+            fetchMissingDataBackground(workItems, puuidRegion, regionLower, region)
                 .catch(e => console.error('[Leaderboard] background error:', e.message));
         }
 

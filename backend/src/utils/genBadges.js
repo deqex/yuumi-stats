@@ -28,7 +28,7 @@ export function genBadges(participants, gameDuration, queueId) {
         if ((p.objectivesStolen ?? 0) > 0) badges.push('Objective Stealer');
         if (p.opScore < 40) badges.push('Struggled');
         if (p.opScore > 90) badges.push('Unstoppable');
-        if (p.opScore > 65 && p.win === false) badges.push('Unlucky');
+        if (p.opScore > 70 && p.win === false) badges.push('Unlucky');
 
         if (p.largestMultiKill === 2) badges.push('Doublekill');
         else if (p.largestMultiKill === 3) badges.push('Triple kill');

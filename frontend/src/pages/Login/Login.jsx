@@ -35,7 +35,7 @@ export default function Login() {
         return;
       }
 
-      login(data.token, data.username, data.leagueName);
+      login(data.token, data.refreshToken, data.username, data.leagueName);
       navigate('/account');
     } catch (err) {
       setError('Could not connect to server.');

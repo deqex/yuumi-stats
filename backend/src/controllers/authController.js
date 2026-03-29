@@ -8,6 +8,19 @@ function getJwtSecret() {
   return secret;
 }
 
+function getRefreshSecret() {
+  const secret = process.env.REFRESH_TOKEN_SECRET;
+  if (!secret) throw new Error('Missing REFRESH_TOKEN_SECRET in backend .env');
+  return secret;
+}
+
+function issueTokens(user) {
+  const payload = { id: user._id, username: user.username };
+  const accessToken = jwt.sign(payload, getJwtSecret(), { expiresIn: '15m' });
+  const refreshToken = jwt.sign(payload, getRefreshSecret(), { expiresIn: '30d' });
+  return { accessToken, refreshToken };
+}
+
 export const register = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -39,9 +52,10 @@ export const register = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ username, password: hashed });
 
-    const token = jwt.sign({ id: user._id, username: user.username }, getJwtSecret(), { expiresIn: '7d' });
+    const { accessToken, refreshToken } = issueTokens(user);
+    await User.findByIdAndUpdate(user._id, { refreshToken });
 
-    res.status(201).json({ token, username: user.username, leagueName: user.leagueName });
+    res.status(201).json({ token: accessToken, refreshToken, username: user.username, leagueName: user.leagueName });
   } catch (err) {
     console.error('register error:', err);
     return res.status(500).json({ message: 'Internal server error.' });
@@ -69,13 +83,47 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
-    const token = jwt.sign({ id: user._id, username: user.username }, getJwtSecret(), { expiresIn: '7d' });
+    const { accessToken, refreshToken } = issueTokens(user);
+    await User.findByIdAndUpdate(user._id, { refreshToken });
 
-    res.json({ token, username: user.username, leagueName: user.leagueName });
+    res.json({ token: accessToken, refreshToken, username: user.username, leagueName: user.leagueName });
   } catch (err) {
     console.error('login error:', err);
     return res.status(500).json({ message: 'Internal server error.' });
   }
+};
+
+export const refresh = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken || typeof refreshToken !== 'string') {
+    return res.status(401).json({ message: 'No refresh token.' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, getRefreshSecret());
+    const user = await User.findById(decoded.id);
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(401).json({ message: 'Invalid refresh token.' });
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = issueTokens(user);
+    await User.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken });
+
+    res.json({ token: accessToken, refreshToken: newRefreshToken });
+  } catch {
+    return res.status(401).json({ message: 'Invalid or expired refresh token.' });
+  }
+};
+
+export const logout = async (req, res) => {
+  const { refreshToken } = req.body;
+  if (refreshToken && typeof refreshToken === 'string') {
+    try {
+      const decoded = jwt.verify(refreshToken, getRefreshSecret());
+      await User.findByIdAndUpdate(decoded.id, { refreshToken: null });
+    } catch {}
+  }
+  res.json({ message: 'Logged out.' });
 };
 
 export const deleteAccount = async (req, res) => {

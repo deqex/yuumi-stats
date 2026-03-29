@@ -1,4 +1,4 @@
-import { getBroadRegion } from "./getBroadRegion.js";
+import { getPuuidRegion } from "./getBroadRegion.js";
 import { riotFetch } from "./riotFetch.js";
 import Profile from "../models/Profile.js";
 
@@ -16,7 +16,7 @@ async function fetchPuuid(summonerName, summonerTag, region) {
         return dbProfile.puuid;
     }
 
-    const broadRegion = getBroadRegion(region);
+    const broadRegion = getPuuidRegion(region);
     const url = `https://${broadRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(summonerTag)}`;
     const res = await riotFetch(url);
     if (res.status === 404) {

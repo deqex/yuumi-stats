@@ -1,7 +1,8 @@
 const VALID_REGIONS = new Set([
     "BR1", "LA1", "LA2", "NA1",
-    "EUN1", "EUW1", "RU", "TR1",
-    "JP1", "KR", "ME1", "OC1", "SG2", "TW2", "VN2",
+    "EUN1", "EUW1", "ME1", "RU", "TR1",
+    "JP1", "KR",
+    "OC1", "SG2", "TW2", "VN2",
 ]);
 
 export function isValidRegion(region) {
@@ -14,12 +15,20 @@ export function getBroadRegion(region) {
     if (["BR1", "LA1", "LA2", "NA1"].includes(upper)) {
         return "americas";
     }
-    if (["EUN1", "EUW1", "RU", "TR1"].includes(upper)) {
+    if (["EUN1", "EUW1", "ME1", "RU", "TR1"].includes(upper)) {
         return "europe";
     }
-    if (["JP1", "KR", "ME1", "OC1", "SG2", "TW2", "VN2"].includes(upper)) {
+    if (["JP1", "KR"].includes(upper)) {
         return "asia";
+    }
+    if (["OC1", "SG2", "TW2", "VN2"].includes(upper)) {
+        return "sea";
     }
 
     throw new Error(`Unknown region: ${region}`);
+}
+
+export function getPuuidRegion(region) {
+    const broad = getBroadRegion(region);
+    return broad === "sea" ? "asia" : broad;
 }
