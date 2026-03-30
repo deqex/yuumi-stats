@@ -351,6 +351,7 @@ body {
 .champions-sidebar {
   width: 200px;
   flex-shrink: 0;
+  align-self: flex-start;
   background: white;
   border-radius: 12px;
   padding: 20px;
